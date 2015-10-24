@@ -27,7 +27,7 @@ class cell:
         self.out_cells = []
         for i in range(0, self.num_in):
             self.weights.append(0 if i % 2 == 0 else 1)
-        print("hello")
+        #print("hello")
     def summation(self):
         x = 0
         for i in range(0, self.num_in + 1):
@@ -66,32 +66,32 @@ class cell:
 
 
 class perceptron:
-    def __init__(self, data, dimension = 2, learning_rate = 0.4, training_times = 10, judge = 1, best_w = False):
+    def __init__(self, dimension = 2, learning_rate = 0.4, training_times = 10, judge = 1, best_w = False):
         self.cells = cell(dimension, learning_rate)
         self.learning_rate = learning_rate
         self.training_times = training_times
-        self.data = data
         self.dimension = dimension
         self.err_rate = 0
         self.judge = judge
         self.itimes = 0
         self.best_w = best_w
         self.best_d = [0,0]
-    def training(self):
+    def training(self, training_set):
+        points = training_set[0]
+        ys = training_set[1]
         for i in range(0, self.training_times):
             x_flag = True
-            for test in self.data:
+            for point, y in zip(points, ys):
                 #print("test point", test)
-                x = self.cells.stimulation(test[0:-1])
+                x = self.cells.stimulation(point)
                 #print("feedback-> ",x, (1 if test[-1] == 2 else -1), test[-1])
-                if x != (1 if test[-1] == self.judge else -1):
+                if x != (1 if y == self.judge else -1):
                     self.cells.feedback()
                     x_flag = False
-                    err_rate = self.get_err_rate()
+                    err_rate = self.get_err_rate(training_set)
                     if self.best_w:
                         if 1 - err_rate > self.best_d[1]:
                             self.best_d = [i, 1 - err_rate]
-
                     #print("triger feedback")
                 #else:
                     #print(test, ", ",self.cells.y)
@@ -101,46 +101,29 @@ class perceptron:
             if x_flag:
                 break
         print(self.cells.weights)
-        '''
-        print(self.cells.weights)
-        for input in self.data:
-            plt.plot(input[0], input[1] ,"ro")
-        x = np.linspace(plt.xlim()[0], plt.xlim()[1], 2)
-        if self.cells.weights[1] == 0:
-            x = [-100,100]
-            y = [self.cells.weights[0]/self.cells.weights[2],self.cells.weights[0]/self.cells.weights[2]]
-        elif self.cells.weights[2] == 0:
-            x = [self.cells.weights[0]/self.cells.weights[1],self.cells.weights[0]/self.cells.weights[1]]
-            y = [-100,100]
-        else:
-            #x = [0,self.cells.weights[0]/self.cells.weights[1]]
-            y = (self.cells.weights[0] - self.cells.weights[1] * x) / self.cells.weights[2]
-        plt.plot(x, y ,"r-")
-        plt.draw()
-        plt.show()
-        '''
-
-
     def get_weights(self):
         return self.cells.getweights()
     def get_itimes(self):
         return self.itimes - 1
     def get_best_result(self):
         return self.best_d
-    def get_err_rate(self):
+    def get_err_rate(self, testing_set):
         count = 0.0
         total = 0.0
-        for test in self.data:
+        points = testing_set[0]
+        ys = testing_set[1]
+        for point, y in zip(points, ys):
             #print(input)
             total += 1.0
-            if self.cells.stimulation(test[0:-1]) != (1 if test[-1] == self.judge else -1):
+            #print("test_set, ", point, y)
+            if self.cells.stimulation(point) != (1 if y == self.judge else -1):
                 count += 1.0
         self.err_rate = count / total
         return self.err_rate
 
     def test(self, point):
         return self.cells.stimulation(point[0:-1])
-
+'''
 class perceptron_single:
     def __init__(self, data, class_num, learning_rate = 0.4, training_times = 10, best_w = False):
         self.class_num = class_num
@@ -245,20 +228,7 @@ class perceptron_m:
                 count += 1
         self.err_rate = count / total
         return self.err_rate
-
-
-
-
-
-        '''
-        for test in self.data:
-            #print(input)
-            total += 1.0
-            if self.cells.stimulation(test[0:-1]) != (1 if test[-1] == 1 else -1):
-                count += 1.0
-        self.err_rate = count / total
-        return self.err_rate
-        '''
+'''
 
 def get_data(fn):
     data = []

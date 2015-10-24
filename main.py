@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import threading
 from perceptron import *
 import numpy as np
+from data_proc import data_proc as dp
 
 color = ["r","b","g","c","m","y","k","w"]
 
@@ -160,11 +161,14 @@ class MenuExampleWindow(Gtk.Window):
         #wait for ui setup
         self.dimension = 2
         self.train_mode = True
-        self.data = []
+        #self.data = []
         self.weights = []
         self.class_table = {}
         self.find_best = False
         #self.class_num
+        self.dataset = dp()
+        self.training_set = []
+        self.testing_set = []
 
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
@@ -231,40 +235,10 @@ class MenuExampleWindow(Gtk.Window):
         if response == Gtk.ResponseType.OK:
             print("Open clicked")
             print("File selected: " + dialog.get_filename())
-            self.data = []
-            self.class_table = myDict()
-            tmp_table = myDict()
-            '''
-            with open(dialog.get_filename()) as f:
-                for line in f:
-                    self.data.append([float(num) for num in line.split()])
-                #print(self.data)
-            '''
-            class_num = 0
-            with open(dialog.get_filename()) as f:
-                for line in f:
-                    tmp_list = []
-                    for idx, num in enumerate(line.split(), start = 0):
-                        if idx == len(line.split()) - 1:
-                            if num not in self.class_table.values():
-                                self.class_table.add(class_num, num)
-                                tmp_table.add(num, class_num)
-                                tmp_list.append(int(class_num))
-                                class_num += 1
-                            else:
-                                tmp_list.append(int(tmp_table[num]))
-                        else:
-                            tmp_list.append(float(num))
-                    self.data.append(tmp_list)
-
-                '''
-                for line in f:
-                    c = 0
-                    print(line)
-                    for num in line.split():
-                        self.data[c].append(num)
-                        c += 1
-                '''
+            self.dataset.set_file_name(dialog.get_filename())
+            self.dataset.open_file()
+            self.training_set = self.dataset.get_data()
+            self.testing_set = self.dataset.get_data()
             #print(f.readline())
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
@@ -292,32 +266,16 @@ class MenuExampleWindow(Gtk.Window):
         else:
             self.find_best = False
     def on_clicked_train(self, widget):
-        if len(self.class_table) == 2:
-            mnn = perceptron(self.data, 2, learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-            mnn.training()
+        if len(self.class_table) != 2:
+            mnn = perceptron(2, learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
+            mnn.training(self.training_set)
             self.weights = [mnn.get_weights()]
-            self.err_rate_value_lab.set_text(str(mnn.get_err_rate() * 100) + "%")
-        else:
-            mnn = perceptron_single(self.data, len(self.class_table), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-            mnn.training()
-            self.weights = mnn.get_weights()
-            self.err_rate_value_lab.set_text(str(mnn.get_err_rate() * 100) + "%")
+            self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
+
         self.class_num_value_lab.set_text(str(len(self.class_table)))
         self.itimes_value_lab.set_text(str(mnn.get_itimes()))
-        self.num_data_value_lab.set_text(str(len(self.data)))
+        self.num_data_value_lab.set_text(str(len(self.training_set)))
         self.best_times_value_lab.set_text(str(mnn.get_best_result()))
-        '''
-        self.err_rate_value_lab.set_text(str(nn.get_err_rate() * 100) + "%")
-        self.weights = nn.get_weights()
-
-        finished_dil = Gtk.MessageDialog(self, 0, Gtk.MessageType.INFO,
-            Gtk.ButtonsType.OK, "Info")
-        finished_dil.format_secondary_text(
-            "Training Finished(Error Rate:  " + str(nn.get_err_rate() * 100) + "%)")
-        finished_dil.run()
-        finished_dil.destroy()
-        '''
-
 
     def on_clicked_draw(self, widget):
         print("draw")
@@ -328,12 +286,14 @@ class MenuExampleWindow(Gtk.Window):
 
     def draw_2dfig(self):
         plt.ion()
-        for point in self.data:
-            if point[-1] == 0:
+        points = self.training_set[0]
+        ys = self.training_set[1]
+        for point, y in zip(points, ys):
+            if y == 0:
                 plt.plot(point[0], point[1] ,color[0] + "o")
-            elif point[-1] == 1:
+            elif y == 1:
                 plt.plot(point[0], point[1] ,color[1] + "o")
-            elif point[-1] == 2:
+            elif y == 2:
                 plt.plot(point[0], point[1] ,color[2] + "o")
             elif point[-1] == 3:
                 plt.plot(point[0], point[1] ,color[3] + "o")
@@ -344,39 +304,6 @@ class MenuExampleWindow(Gtk.Window):
             elif point[-1] == 6:
                 plt.plot(point[0], point[1] ,color[6] + "o")
 
-        '''
-        pclass = [[[],[]],[[],[]],[[],[]],[[],[]],[[],[]],[[],[]]]
-        print(len(self.data[2]))
-        for i in range(0, len(self.data[2])):
-            if self.data[2][i] == "0":
-                plt.plot(self.data[0][i],self.data[1][i] ,"bo")
-            elif self.data[2][i] == "1":
-                plt.plot(self.data[0][i],self.data[1][i] ,"go")
-            elif self.data[2][i] == "2":
-                plt.plot(self.data[0][i],self.data[1][i] ,"ro")
-            elif self.data[2][i] == "3":
-                plt.plot(self.data[0][i],self.data[1][i] ,"co")
-            elif self.data[2][i] == "4":
-                plt.plot(self.data[0][i],self.data[1][i] ,"mo")
-            elif self.data[2][i] == "5":
-                plt.plot(self.data[0][i],self.data[1][i] ,"yo")
-            elif self.data[2][i] == "6":
-                plt.plot(self.data[0][i],self.data[1][i] ,"ko")
-        '''
-        '''
-        self.weights = self.weights[0]
-        x = np.linspace(plt.xlim()[0], plt.xlim()[1], 2)
-        if self.weights[1] == 0:
-            x = [-100,100]
-            y = [self.weights[0]/self.weights[2],self.weights[0]/self.weights[2]]
-        elif self.weights[2] == 0:
-            x = [self.weights[0]/self.weights[1],self.weights[0]/self.weights[1]]
-            y = [-100,100]
-        else:
-            #x = [0,self.weights[0]/self.weights[1]]
-            y = (self.weights[0] - self.weights[1] * x) / self.weights[2]
-        plt.plot(x, y ,"k--")
-        '''
         #plt.plot([2,0,-2,0], [0,2,0,-2] ,"wo")
         print(self.weights)
         if self.weights == 1:

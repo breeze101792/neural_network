@@ -15,8 +15,8 @@ class data_proc:
         self.ys = []
         self.nom_ys = []
         self.class_table = []
-
-
+    def set_file_name(self, file_name):
+        self.file_name = file_name
     def open_file(self):
         self.data = []
 
@@ -42,7 +42,7 @@ class data_proc:
                         tmp_list.append(float(num))
                 self.data.append(tmp_list)
                 '''
-        #print(self.data)
+        print(self.data)
     def get_data(self, rate_of_data = 1, is_random = False, approach = "class"):
         self.__data_normalize(approach)
         tmp_data = self.data
