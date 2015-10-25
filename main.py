@@ -274,7 +274,7 @@ class MenuExampleWindow(Gtk.Window):
 
         self.class_num_value_lab.set_text(str(len(self.class_table)))
         self.itimes_value_lab.set_text(str(mnn.get_itimes()))
-        self.num_data_value_lab.set_text(str(len(self.training_set)))
+        self.num_data_value_lab.set_text(str(len(self.training_set[0])))
         self.best_times_value_lab.set_text(str(mnn.get_best_result()))
 
     def on_clicked_draw(self, widget):

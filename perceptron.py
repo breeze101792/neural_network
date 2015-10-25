@@ -79,6 +79,7 @@ class perceptron:
     def training(self, training_set):
         points = training_set[0]
         ys = training_set[1]
+        self.itimes = 0
         for i in range(0, self.training_times):
             x_flag = True
             for point, y in zip(points, ys):
@@ -104,7 +105,7 @@ class perceptron:
     def get_weights(self):
         return self.cells.getweights()
     def get_itimes(self):
-        return self.itimes - 1
+        return self.itimes
     def get_best_result(self):
         return self.best_d
     def get_err_rate(self, testing_set):
