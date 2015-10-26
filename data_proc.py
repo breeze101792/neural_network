@@ -19,6 +19,9 @@ class data_proc:
         self.file_name = file_name
     def open_file(self):
         self.data = []
+        self.ys = []
+        self.nom_ys = []
+        self.class_table = []
 
         tmp_table = myDict()
         class_num = 0
