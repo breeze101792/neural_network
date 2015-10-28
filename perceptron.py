@@ -89,8 +89,8 @@ class perceptron:
                 if x != (1 if y == self.judge else -1):
                     self.cells.feedback()
                     x_flag = False
-                    err_rate = self.get_err_rate(training_set)
                     if self.best_w:
+                        err_rate = self.get_err_rate(training_set)
                         if 1 - err_rate > self.best_d[1]:
                             self.best_d = [i, 1 - err_rate]
                     #print("triger feedback")
@@ -109,6 +109,7 @@ class perceptron:
     def get_best_result(self):
         return self.best_d
     def get_err_rate(self, testing_set):
+        # print(testing_set)
         count = 0.0
         total = 0.0
         points = testing_set[0]

@@ -237,8 +237,8 @@ class MenuExampleWindow(Gtk.Window):
             print("File selected: " + dialog.get_filename())
             self.dataset.set_file_name(dialog.get_filename())
             self.dataset.open_file()
-            self.training_set = self.dataset.get_data()
-            self.testing_set = self.dataset.get_data()
+            self.training_set = self.dataset.get_data(0.3)
+            self.testing_set = self.dataset.get_another_data(self.training_set[0])
             #print(f.readline())
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
@@ -266,11 +266,10 @@ class MenuExampleWindow(Gtk.Window):
         else:
             self.find_best = False
     def on_clicked_train(self, widget):
-        if len(self.class_table) != 2:
-            mnn = perceptron(2, learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-            mnn.training(self.training_set)
-            self.weights = [mnn.get_weights()]
-            self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
+        mnn = perceptron(2, learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
+        mnn.training(self.training_set)
+        self.weights = [mnn.get_weights()]
+        self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
 
         self.class_num_value_lab.set_text(str(len(self.class_table)))
         self.itimes_value_lab.set_text(str(mnn.get_itimes()))

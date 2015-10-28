@@ -46,20 +46,29 @@ class data_proc:
                 self.data.append(tmp_list)
                 '''
         print(self.data)
-    def get_data(self, rate_of_data = 1, is_random = False, approach = "class"):
+    def get_data(self, rate_of_data = 1, is_random = True, approach = "class"):
         self.__data_normalize(approach)
         tmp_data = self.data
         tmp_nom_ys = self.nom_ys
         sub_dataset = []
         sub_ys = []
+        tmp = 0
         if is_random:
             for _ in range(int(rate_of_data * len(self.data))):
-                sub_dataset.append(tmp_data.pop(random.randint(0, len(tmp_data) - 1)))
-                sub_ys.append(tmp_nom_ys.pop(random.randint(0, len(tmp_nom_ys) - 1)))
+                tmp = random.randint(0, len(tmp_data))
+                sub_dataset.append(tmp_data.pop(tmp - 1))
+                sub_ys.append(tmp_nom_ys.pop(tmp - 1))
             return sub_dataset, sub_ys
         elif not is_random:
             return self.data, self.nom_ys
-
+    def get_another_data(self, part_of_data):
+        sub_dataset = []
+        sub_ys = []
+        for point, y in zip(self.data, self.ys):
+            if point not in part_of_data:
+                sub_dataset.append(point)
+                sub_ys.append(y)
+        return sub_dataset, sub_ys
     #approach = class/function
     def __data_normalize(self, approach = "class"):
         if approach == "class":
