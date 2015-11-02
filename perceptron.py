@@ -63,7 +63,7 @@ class cell_sigmoid(cell):
     def activation(self):
         stimulates = self.summation()
         #print("stimulation = ", stimulates)
-        self.y = (1 - math.e ** (-2 * self.v_para *  stimulates))/(1 + math.e ** (-2 * self.v_para * stimulates))
+        self.y = 1 / (1 + math.exp(-stimulates))
         return self.y
 
 class perceptron:
