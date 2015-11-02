@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import random
+import numpy as np
 class myDict(dict):
 
     def __init__(self):
@@ -31,6 +32,14 @@ class data_proc:
                 self.data.append([float(x) for x in line.split()[0:-1]])
                 self.ys.append(float(line.split()[-1]))
         # print(self.data)
+    @staticmethod
+    def to_ndata(points):
+        tmp = []
+        for p in points:
+            tmp.append(np.array(p))
+            print(p)
+        return tmp
+
     def get_data(self, rate_of_data = 1, is_random = True, approach = "class"):
         self.__data_normalize(approach)
         tmp_data = self.data.copy()
@@ -83,6 +92,8 @@ def main():
     data = data_proc()
     data.open_file()
     data.get_data()#is_random = True, rate_of_data = 0.5)
+    # print(data.get_data())
+    print(data_proc.to_ndata(data.get_data()[0]))
     #print(data.nom_ys)
     #print(data.data, "\n", data.class_table, "\n", data.ys, "\n", data.get_data(is_random = True))
     #print(len(data.ys), ", ", len(data.data))
