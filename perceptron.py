@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 import math
 import random
@@ -73,13 +73,15 @@ class cell:
 
     def getweights(self):
         return self.weights
+    def get_weights(self):
+        return self.weights
     def get_last_y(self):
         return self.y
     def __str__(self):
         print("test")
 
 class mlp:
-    def __init__(self, structure = [2], dimension = 4, learning_rate = 0.4, numofclass = 2, training_times = 10, judge = 1, best_w = False):
+    def __init__(self, structure = [2], dimension = 2, learning_rate = 0.2, numofclass = 2, training_times = 10, judge = 1, best_w = False):
         self.cells = []
         self.learning_rate = learning_rate
         self.training_times = training_times
@@ -113,13 +115,31 @@ class mlp:
         self.cells.append(tmp_cell)
         # print(self.cells)
     def training(self, training_set):
+        points = training_set[0]
+        ys = training_set[1]
         self.cells[0][0].set_weights([-1.2,1,1])
         self.cells[0][1].set_weights([0.3,1,1])
         self.cells[1][0].set_weights([0.5,0.4,0.8])
-        print("forward ->\t", self.__forward([1,1]))
-        self.__backward([0])
+        for _ in range(50):
+            for point, y in zip(points, ys):
+                out = self.__forward(point)[0]
+                # point = [1,1]
+                # y = 0
+                print("point, y ->\t", point,", ",y)
+                print("output ->\t", out)
+                if y == 1:
+                    self.__backward([1])
+                    print("cl ans->\t", 1)
+                else:
+                    self.__backward([0])
+                    print("cl ans->\t", 0)
+                print("weight ->\t", self.cells[0][0].get_weights(), ", ", self.cells[0][1].get_weights())
+                print("y12 ->\t", self.cells[0][0].get_last_y(), ", ", self.cells[0][1].get_last_y())
+                print("output ->\t", self.__forward(point)[0])#, "\n")
+                print("end!\n")
 
-        pass
+
+
 
     def __forward(self, point):
         tmp = []
@@ -136,12 +156,13 @@ class mlp:
         delta_k = []
         cell_y = 0
 
+        print("backward")
         # Adjust weight for output layer
         for idx, cell_j in enumerate(self.cells[-1]):
             # calc delta value
             cell_y = cell_j.get_last_y()
             delta_k.append((ys[idx] - cell_y) * cell_y * (1 - cell_y))
-            print(idx, ", ", delta_k)
+            print("yo idx, delta_k->\t", idx, ", ", delta_k)
             # Adjust weight
             cell_j.feedback(delta_k[-1])
 
@@ -157,12 +178,12 @@ class mlp:
                 for idx, cell_k in enumerate(self.cells[layer + 1]):
                     # idx + 1, 1 for bias X0
                     weight_kj.append(cell_k.getweights()[idx + 1])
-                    print(delta_k, ", ", idx)
+                    # print(delta_k, ", ", idx)
                     sum_wd += weight_kj[-1] * delta_k[idx]
                 # calc delta_j
                 delta_j.append(cell_j.get_last_y() * (1 - cell_j.get_last_y()) * sum_wd)
                 cell_j.feedback(delta_j[-1])
-                # for next loopt as it's next layer
+                # for next loop become next layer
                 delta_k = delta_j
 
 class cell_sigmoid(cell):
@@ -261,19 +282,15 @@ class perceptron:
     def test(self, point):
         return self.cells.stimulation(point[0:-1])
 
-
-
-
-
 def main():
-    print("Percetpron Test!!!")
-    data = dp("./dataset/2Hcircle1.txt")
-    #data = get_data("./dataset/2CloseS3.txt")
+    print("Percetpron Test!!!-------------------------------------------------------------------------!")
+    # data = dp("./dataset/2Hcircle1.txt")
+    # data = get_data("./dataset/2CloseS3.txt")
     # data = dp("./dataset/C3D.TXT")
-    #data = [[0,0,1],[0,1,1],[1,0,-1],[1,1,1]]
-
+    # data = [[0,0,1],[0,1,1],[1,0,-1],[1,1,1]]
+    data = [[[1,1],[0,0],[1,0],[0,1]],[0,0,1,1]]
     nn = mlp()
-    nn.training([1])
+    nn.training(data)
     # test = cell_sigmoid(5)
     # tmp = test.stimulation([1,2,-3,-4,-5])
     # print(tmp)
