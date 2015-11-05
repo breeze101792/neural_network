@@ -6,7 +6,7 @@ import random
 from data_proc import data_proc as dp
 
 class cell:
-    def __init__(self, dimensions = 2, learning_rate = 0.4):
+    def __init__(self, dimensions = 2, learning_rate = 0.4, lr_coefficent = 1):
         self.dimensions = dimensions
         self.learning_rate = learning_rate
         self.xs = 0
@@ -14,6 +14,8 @@ class cell:
         self.weights = None
         self.in_cells = []
         self.out_cells = []
+        self.lr_coefficent = lr_coefficent
+        self.dirrection = 0
         self.weight_init()
         print("dim -> ", dimensions)
     def weight_init(self):
@@ -81,7 +83,7 @@ class cell:
         print("test")
 
 class mlp:
-    def __init__(self, structure = [2], dimension = 2, learning_rate = 0.2, numofclass = 2, training_times = 10, judge = 1, best_w = False):
+    def __init__(self, structure = [2], dimension = 2, learning_rate = 0.4, numofclass = 2, training_times = 10, judge = 1, best_w = False):
         self.cells = []
         self.learning_rate = learning_rate
         self.training_times = training_times
@@ -187,8 +189,8 @@ class mlp:
                 delta_k = delta_j
 
 class cell_sigmoid(cell):
-    def __init__(self, dimensions = 2, learning_rate = 0.5):
-        super().__init__(dimensions = dimensions, learning_rate = learning_rate)
+    def __init__(self, dimensions = 2, learning_rate = 0.5, lr_coefficent = 0.8):
+        super().__init__(dimensions = dimensions, learning_rate = learning_rate, lr_coefficent = 0.8)
     def weight_init(self):
         tmp = [-1]
         for i in range(0, self.dimensions):
@@ -214,6 +216,15 @@ class cell_sigmoid(cell):
         #         #print("after < ", self.weights , ", ", self.xs)
         # elif self.y >= 0:
         #     self.weights = self.weights - self.xs * self.learning_rate
+        if delta > 0:
+            if self.dirrection < 0:
+                self.learning_rate = self.learning_rate * self.lr_coefficent
+            self.dirrection = 1
+        elif delta < 0:
+            if self.dirrection > 0:
+                self.learning_rate = self.learning_rate * self.lr_coefficent
+            self.dirrection == -1
+
         delta = np.array(delta)
         self.weights = self.weights + self.learning_rate * delta * self.xs
 
