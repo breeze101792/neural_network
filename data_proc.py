@@ -10,12 +10,13 @@ class myDict(dict):
         self[key] = value
 
 class data_proc:
-    def __init__(self, file_name = '/home/shaowu/code/neural_network/dataset/2Ccircle1.txt'):
+    def __init__(self, file_name = None):
         self.file_name = file_name
         self.data = []
         self.ys = []
         self.nom_ys = []
         self.class_table = []
+        self.class_num = 0
     def set_file_name(self, file_name):
         self.file_name = file_name
     def open_file(self):
@@ -25,19 +26,23 @@ class data_proc:
         self.class_table = []
 
         tmp_table = myDict()
-        class_num = 0
+        self.class_num = 0
+        tmp_list = None
         with open(self.file_name) as f:
             for line in f:
+                tmp_list = line.split()
+                if float(tmp_list[-1]) not in self.ys:
+                    self.class_num += 1
                 # print([float(x) for x in line.split()])
-                self.data.append([float(x) for x in line.split()[0:-1]])
-                self.ys.append(float(line.split()[-1]))
+                self.data.append([float(x) for x in tmp_list[0:-1]])
+                self.ys.append(float(tmp_list[-1]))
         # print(self.data)
     @staticmethod
     def to_ndata(points):
         tmp = []
         for p in points:
             tmp.append(np.array(p))
-            print(p)
+            # print(p)
         return tmp
 
     def get_data(self, rate_of_data = 1, is_random = True, approach = "class"):
@@ -70,7 +75,24 @@ class data_proc:
     #approach = class/function
     def __data_normalize(self, approach = "class"):
         if approach == "class":
-            print("class!")
+            print("class")
+            self.class_table = myDict()
+            self.nom_ys = []
+            distance = 1 / (self.class_num * 2)
+            class_middle = distance
+            for each_y in self.ys:
+                if each_y not in self.class_table.values():
+                    self.class_table.add(class_middle, each_y)
+                    self.nom_ys.append(class_middle)
+                    class_middle += distance * 2
+                    # print("add ", self.class_table)
+                else:
+                    self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
+                    #print([k for k, v in self.class_table.items() if v == each_y])
+                    #print("no add ", self.class_table)
+
+        else:
+            print("old")
             self.class_table = myDict()
             self.nom_ys = []
             class_num = 0
@@ -84,16 +106,14 @@ class data_proc:
                     self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
                     #print([k for k, v in self.class_table.items() if v == each_y])
                     #print("no add ", self.class_table)
-        elif approach == "function":
-            print("function")
 
 def main():
     print("dataset class test")
-    data = data_proc()
+    data = data_proc('/home/shaowu/code/neural_network/dataset/2Ccircle1.txt')
     data.open_file()
-    data.get_data()#is_random = True, rate_of_data = 0.5)
-    # print(data.get_data())
-    print(data_proc.to_ndata(data.get_data()[0]))
+    print(data.class_num)
+    print(data.get_data())
+    # print(data_proc.to_ndata(data.get_data()[0]))
     #print(data.nom_ys)
     #print(data.data, "\n", data.class_table, "\n", data.ys, "\n", data.get_data(is_random = True))
     #print(len(data.ys), ", ", len(data.data))
