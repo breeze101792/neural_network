@@ -17,7 +17,7 @@ class cell:
         self.lr_coefficent = lr_coefficent
         self.dirrection = 0
         self.weight_init()
-        print("dim -> ", dimensions)
+        # print("dim -> ", dimensions)
     def weight_init(self):
         # self.weights = [-1]
         # for i in range(0, self.dimensions):
@@ -83,7 +83,7 @@ class cell:
         print("test")
 
 class mlp:
-    def __init__(self, structure = [2], dimension = 2, learning_rate = 0.4, numofclass = 2, training_times = 10, judge = 1, best_w = False):
+    def __init__(self, structure = [2,1], class_middle = [0.25, 0.75], hit_rate = 0.90,  mse_max = 0.001, dimension = 2, learning_rate = 0.5, numofclass = 2, training_times = 10, judge = 1, best_w = False):
         self.cells = []
         self.learning_rate = learning_rate
         self.training_times = training_times
@@ -95,54 +95,109 @@ class mlp:
         self.best_d = [0,0]
 
         # structure is [num of lay1, num of lay2, ...., num of layp]
+        self.hit_rate = hit_rate
         self.structure = structure
-        self.numofhiddenlayer = len(structure)
+        self.class_middle = class_middle
+        self.mse_max = mse_max
+        self.numofhiddenlayer = len(structure) - 1
         self.numofoutput = 1
-        self.numofclass = numofclass
+        self.numofclass = len(class_middle)
         self.struct_init()
     def struct_init(self):
         self.cells = []
         tmp_cell = []
         num_of_inputs = self.dimension
 
-        for lay in range(self.numofhiddenlayer):
+        for lay in range(len(self.structure)):
             tmp_cell = []
             for cell in range(self.structure[lay]):
                 tmp_cell.append(cell_sigmoid(num_of_inputs, self.learning_rate))
             num_of_inputs = self.structure[lay]
             self.cells.append(tmp_cell)
-        tmp_cell = []
-        for cell in range(self.numofoutput):
-            tmp_cell.append(cell_sigmoid(num_of_inputs, self.learning_rate))
-        self.cells.append(tmp_cell)
-        # print(self.cells)
+        # tmp_cell = []
+        # for cell in range(self.numofoutput):
+        #     tmp_cell.append(cell_sigmoid(num_of_inputs, self.learning_rate))
+        # self.cells.append(tmp_cell)
+        #TODO multilayer
+        print(self.cells)
     def training(self, training_set):
-        points = training_set[0]
-        ys = training_set[1]
+        points_set = training_set[0]
+        expected_output_set = training_set[1]
+
+        tmp_point = []
+        tmp_y = []
+        mse = 1
+        tmp_mse = 0
+        feedback_flag = False
+        for it in range(self.training_times):
+            tmp_point = []
+            tmp_o = []
+            mse = 0
+            for point, ds in zip(points_set, expected_output_set):
+                # self.__backward([y], self.__forward(point))
+                print("point, d ->\t", point,", ",ds)
+                #TODO DATA trainsform
+                ds = [ds]
+                os = self.__forward(point)
+                print("os-before ->\t", os)
+
+                #mse
+                # tmp_mse = 0
+                # for idx in range(len(self.cells[-1])):
+                #     tmp_mse += (ys[idx] - os[idx]) * (ys[idx] - os[idx])
+                # mse += tmp_mse
+
+
+                feedback_flag = True
+                for idx in range(len(self.cells[-1])):
+                    min_c = 5
+                    for c in self.class_middle:
+                        if abs(os[idx] - min_c) > abs(os[idx] - c):
+                            min_c = c
+                    print("class_middle\t", min_c)
+                    print("min_c, ys->idx", min_c, ds[idx])
+                    print("back or not\t", min_c != ds[idx])
+                    if min_c == ds[idx]:
+                        feedback_flag = False
+                            # print("feedback false")
+
+                if feedback_flag:
+                    self.__backward(ds, os)
+
+                print("os-after ->\t", self.__forward(point))#, "\n")
+                print("end!\n")
+                tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+                tmp_o.append(ds)
+            mes = mse / len(training_set[0])
+            hit_tmp, data_tmp = self.get_hit_rate(training_set)
+            if hit_tmp > self.hit_rate:
+                return data_tmp
+            # print("mse\t", mse)
+            # if self.mse_max > mse:
+            #     return tmp_point, tmp_y
+        return tmp_point, tmp_o
+
+
+
+    def test_train(self, training_set):
         self.cells[0][0].set_weights([-1.2,1,1])
         self.cells[0][1].set_weights([0.3,1,1])
         self.cells[1][0].set_weights([0.5,0.4,0.8])
-        for _ in range(50):
-            for point, y in zip(points, ys):
-                out = self.__forward(point)[0]
-                # point = [1,1]
-                # y = 0
-                print("point, y ->\t", point,", ",y)
-                print("output ->\t", out)
-                if y == 1:
-                    self.__backward([1])
-                    print("cl ans->\t", 1)
-                else:
-                    self.__backward([0])
-                    print("cl ans->\t", 0)
-                print("weight ->\t", self.cells[0][0].get_weights(), ", ", self.cells[0][1].get_weights())
-                print("y12 ->\t", self.cells[0][0].get_last_y(), ", ", self.cells[0][1].get_last_y())
-                print("output ->\t", self.__forward(point)[0])#, "\n")
-                print("end!\n")
+        p = training_set[0]
+        a = training_set[1]
+        for idx in range(5000):
 
+            for x,y in zip(p,a):
+                out = self.__forward(x)
+                # print("\nbefore", out)
+                self.__backward([y], self.__forward(x))
+                aout = self.__forward(x)
+                # if(out == aout):
+                #     print(idx)
+                #     input("equ")
+                # print("after ad\t", aout)
 
-
-
+            print("\n")
     def __forward(self, point):
         tmp = []
         yi = point
@@ -153,48 +208,99 @@ class mlp:
             yi = tmp
         return yi
     # ys is like [3.9, 5.8], the number is depend on the number of output
-    def __backward(self, ys):
-        delta_j = []
-        delta_k = []
-        cell_y = 0
-
+    def __backward(self, ds, os):
         print("backward")
-        # Adjust weight for output layer
-        for idx, cell_j in enumerate(self.cells[-1]):
-            # calc delta value
-            cell_y = cell_j.get_last_y()
-            delta_k.append((ys[idx] - cell_y) * cell_y * (1 - cell_y))
-            print("yo idx, delta_k->\t", idx, ", ", delta_k)
-            # Adjust weight
-            cell_j.feedback(delta_k[-1])
+        delta = []
+        print("ds, os\t", ds,", ", os)
 
-        # Adjust weight for hidden layers
-        # for each layer
-        for layer in range(self.numofhiddenlayer - 1, -1,-1):
-            # for each cell in the layer
-            # k mean previous layer
-            for cell_j in self.cells[layer]:
-                weight_kj = []
-                sum_wd = 0
-                # calc sum of delta_j * weight_kj
-                for idx, cell_k in enumerate(self.cells[layer + 1]):
-                    # idx + 1, 1 for bias X0
-                    weight_kj.append(cell_k.getweights()[idx + 1])
-                    # print(delta_k, ", ", idx)
-                    sum_wd += weight_kj[-1] * delta_k[idx]
-                # calc delta_j
-                delta_j.append(cell_j.get_last_y() * (1 - cell_j.get_last_y()) * sum_wd)
-                cell_j.feedback(delta_j[-1])
-                # for next loop become next layer
-                delta_k = delta_j
+        #output delta
+        for idx, cell_j in enumerate(self.cells[-1]):
+            delta.append([(ds[idx] - os[idx]) * os[idx] * (1 - os[idx])])
+        # print("delta\t", delta)
+
+        #hidden layer delta
+        # range hidden layer for tatoal layer -2 to 0 step -1
+        for layer_idx in range(len(self.cells) - 2, -1, -1):
+            delta_j = []
+            for cell_idx, cell_j in enumerate(self.cells[layer_idx]):
+                #TODO check delta list
+                sigma_dk_wkj = 0
+                # print("delta", delta)
+                for cell_k, each_delta_k in zip(self.cells[idx + 1], delta[0]):
+                    sigma_dk_wkj += each_delta_k * cell_k.get_weights()[cell_idx + 1]
+                delta_j.append(cell_j.get_last_y() * (1 - cell_j.get_last_y()) * sigma_dk_wkj)
+            # print("delta_j", delta_j)
+            #delta use revere method to memerize
+            delta.append(delta_j)
+            # print("last_delta\t", delta)
+        print("delta\t", delta)
+
+        #adjust weights
+        for layer_idx in range(len(self.cells)):
+            for cell_idx in range(len(self.cells[layer_idx])):
+                self.cells[layer_idx][cell_idx].feedback(delta[len(self.cells) - 1 - layer_idx][cell_idx])
+
+        for layer_idx in range(len(self.cells)):
+            for cell_idx in range(len(self.cells[layer_idx])):
+                print(layer_idx, ", ", cell_idx, "->\t", self.cells[layer_idx][cell_idx].get_weights())
+
+    def get_weights(self):
+        return self.cells[-1][0].get_weights()
+    def get_hit_rate(self, testting_set):
+        points = testting_set[0]
+        ys = testting_set[1]
+
+        tmp_point = []
+        tmp_y = []
+        count = 0
+        min_c = 0
+        for point, y in zip(points, ys):
+            out = self.__forward(point)
+            # TODO mutilp
+            out = out[0]
+
+            for c in self.class_middle:
+                if abs(out - min_c) > abs(out - c):
+                    min_c = c
+            if y == min_c:
+                count += 1
+
+            tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+            tmp_y.append(y)
+
+        return count / len(testting_set[0]), (tmp_point, tmp_y)
+
+    def get_err_rate(self, testting_set):
+        points = testting_set[0]
+        ys = testting_set[1]
+
+        tmp_point = []
+        tmp_y = []
+        count = 0
+        min_c = 0
+        for point, y in zip(points, ys):
+            out = self.__forward(point)
+            # TODO mutilp
+            out = out[0]
+
+            for c in self.class_middle:
+                if abs(out - min_c) > abs(out - c):
+                    min_c = c
+            if y == min_c:
+                count += 1
+
+            tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+            tmp_y.append(y)
+
+        return 1 - count / len(testting_set[0]), (tmp_point, tmp_y)
 
 class cell_sigmoid(cell):
-    def __init__(self, dimensions = 2, learning_rate = 0.5, lr_coefficent = 0.8):
-        super().__init__(dimensions = dimensions, learning_rate = learning_rate, lr_coefficent = 0.8)
+    def __init__(self, dimensions = 2, learning_rate = 0.5, lr_coefficent = 1):
+        super().__init__(dimensions = dimensions, learning_rate = learning_rate, lr_coefficent = lr_coefficent)
     def weight_init(self):
         tmp = [-1]
         for i in range(0, self.dimensions):
-            tmp.append(random.random())
+            tmp.append(random.random() * (1 if i % 2 == 0 else -1))
         self.weights = np.array(tmp)
     def set_weights(self, w):
         self.weights = np.array(w)
@@ -216,23 +322,25 @@ class cell_sigmoid(cell):
         #         #print("after < ", self.weights , ", ", self.xs)
         # elif self.y >= 0:
         #     self.weights = self.weights - self.xs * self.learning_rate
-        if delta > 0:
-            if self.dirrection < 0:
-                self.learning_rate = self.learning_rate * self.lr_coefficent
-            self.dirrection = 1
-        elif delta < 0:
-            if self.dirrection > 0:
-                self.learning_rate = self.learning_rate * self.lr_coefficent
-            self.dirrection == -1
+
+        # if delta > 0:
+        #     if self.dirrection < 0:
+        #         self.learning_rate = self.learning_rate * self.lr_coefficent
+        #     self.dirrection = 1
+        # elif delta < 0:
+        #     if self.dirrection > 0:
+        #         self.learning_rate = self.learning_rate * self.lr_coefficent
+        #     self.dirrection == -1
 
         delta = np.array(delta)
         self.weights = self.weights + self.learning_rate * delta * self.xs
 
         # status
-        print("feedback ->\t", self.weights)
+        # print("feedback ->\t", self.weights)
+        # print("delta->\t", delta)
 
 class perceptron:
-    def __init__(self, dimension = 2, learning_rate = 0.4, training_times = 10, judge = 1, best_w = False):
+    def __init__(self, dimension = 2, learning_rate = 0.8, training_times = 10, judge = 1, best_w = False):
         self.cells = cell(dimension, learning_rate)
         self.learning_rate = learning_rate
         self.training_times = training_times
@@ -301,7 +409,7 @@ def main():
     # data = [[0,0,1],[0,1,1],[1,0,-1],[1,1,1]]
     data = [[[1,1],[0,0],[1,0],[0,1]],[0,0,1,1]]
     nn = mlp()
-    nn.training(data)
+    nn.test_train(data)
     # test = cell_sigmoid(5)
     # tmp = test.stimulation([1,2,-3,-4,-5])
     # print(tmp)

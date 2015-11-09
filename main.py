@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from gi.repository import Gtk, Gdk
+from gi.repository.GdkPixbuf import Pixbuf
 import matplotlib.pyplot as plt
 import threading
 from perceptron import *
 import numpy as np
 from data_proc import data_proc as dp
+from ploting import paper
 
 color = ["r","b","g","c","m","y","k","w"]
 
@@ -74,7 +76,8 @@ class MenuExampleWindow(Gtk.Window):
         toolbar = uimanager.get_widget("/ToolBar")
         main_ui.pack_start(toolbar, False, False, 0)
 
-        body_panel = Gtk.Table(1, 2, True)
+        # body pannel settings
+        body_panel = Gtk.Table(2, 4, True)
         main_ui.pack_start(body_panel, True, True, 0)
 
         #settings pannel
@@ -157,6 +160,21 @@ class MenuExampleWindow(Gtk.Window):
         nu_log.attach(num_data_lab, 0, 1, 6, 7)
         nu_log.attach(self.num_data_value_lab, 1, 2, 6, 7)
         '''
+        #image pannel
+        # self.ui_img_panel(body_panel)
+        # self.ori_pixbuf = Pixbuf.new
+        ori_draw_panel = Gtk.Box(10, 2, True)
+        body_panel.attach(ori_draw_panel, 2, 4, 0, 1)
+
+        self.ori_paper = paper()
+        ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
+
+        nned_draw_panel = Gtk.Box(10, 2, True)
+        body_panel.attach(nned_draw_panel, 2, 4, 1, 2)
+
+        self.nned_paper = paper()
+        nned_draw_panel.pack_start(self.nned_paper.canvas, True, True, 0)
+        self.nned_paper.resetpaper()
 
         #wait for ui setup
         self.dimension = 2
@@ -169,7 +187,11 @@ class MenuExampleWindow(Gtk.Window):
         self.dataset = dp()
         self.training_set = []
         self.testing_set = []
-
+        self.trainsformed_data = []
+    # def ui_img_panel(self, container):
+    #     nu_log = Gtk.image(10, 2, True)
+    #     container.attach(nu_log, 1, 2, 0, 1)
+    #     pass
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
         action_group.add_action(action_filemenu)
@@ -237,8 +259,13 @@ class MenuExampleWindow(Gtk.Window):
             print("File selected: " + dialog.get_filename())
             self.dataset.set_file_name(dialog.get_filename())
             self.dataset.open_file()
-            self.training_set = self.dataset.get_data(0.3)
-            self.testing_set = self.dataset.get_another_data(self.training_set[0])
+            self.training_set = self.dataset.get_data(1)
+            self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+            self.testing_set = self.training_set
+            print(self.training_set)
+            self.ori_paper.draw_2d_point(self.training_set)
+            # self.training_set = self.dataset.get_data(0.3)
+            # self.testing_set = self.dataset.get_another_data(self.training_set[0])
             #print(f.readline())
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
@@ -266,17 +293,26 @@ class MenuExampleWindow(Gtk.Window):
         else:
             self.find_best = False
     def on_clicked_train(self, widget):
-        mnn = perceptron(2, learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-        mnn.training(self.training_set)
-        self.weights = [mnn.get_weights()]
-        self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
+        nn = mlp(structure = [2,1], dimension = len(self.training_set[0][0]), class_middle = self.dataset.get_class_middle(), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
+        self.trainsformed_data = nn.training(self.training_set)
+        err, self.trainsformed_data = nn.get_err_rate(self.testing_set)
+        self.err_rate_value_lab.set_text(str(err * 100) + "%")
+        # print(self.trainsformed_data)
+        self.weights = [nn.get_weights()]
+        # print("weight", self.weights)
 
-        self.class_num_value_lab.set_text(str(len(self.class_table)))
-        self.itimes_value_lab.set_text(str(mnn.get_itimes()))
-        self.num_data_value_lab.set_text(str(len(self.training_set[0])))
-        tmp = mnn.get_best_result()
-        tmp[0] += 1
-        self.best_times_value_lab.set_text(str(tmp))
+        self.nned_paper.draw_2d_point(self.trainsformed_data)
+        # mnn = perceptron(len(self.training_set[0][0]), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
+        # mnn.training(self.training_set)
+        # self.weights = [mnn.get_weights()]
+        # self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
+
+        # self.class_num_value_lab.set_text(str(len(self.class_table)))
+        # self.itimes_value_lab.set_text(str(mnn.get_itimes()))
+        # self.num_data_value_lab.set_text(str(len(self.training_set[0])))
+        # tmp = mnn.get_best_result()
+        # tmp[0] += 1
+        # self.best_times_value_lab.set_text(str(tmp))
 
     def on_clicked_draw(self, widget):
         print("draw")
@@ -285,20 +321,24 @@ class MenuExampleWindow(Gtk.Window):
         draw_thread.join()
         #self.draw_2dfig()
 
+
+
     def draw_2dfig(self):
         plt.ion()
-        points = self.training_set[0]
-        ys = self.training_set[1]
+        points = self.trainsformed_data[0]
+        # points = self.training_set[0]
+        ys = self.trainsformed_data[1]
         for point, y in zip(points, ys):
-            if y == 0:
+            # print("point,y-<\t", point, ", ", y)
+            if y == 0.75:
                 plt.plot(point[0], point[1] ,color[0] + "o")
-            elif y == 1:
+            elif y == 0.25:
                 plt.plot(point[0], point[1] ,color[1] + "o")
-            elif y == 2:
+            elif abs(y - 0.16) < 0.2:
                 plt.plot(point[0], point[1] ,color[2] + "o")
-            elif point[-1] == 3:
+            elif abs(y - 0.5) < 0.2:
                 plt.plot(point[0], point[1] ,color[3] + "o")
-            elif point[-1] == 4:
+            elif abs(y - 0.83) < 0.2:
                 plt.plot(point[0], point[1] ,color[4] + "o")
             elif point[-1] == 5:
                 plt.plot(point[0], point[1] ,color[5] + "o")
@@ -341,8 +381,6 @@ class MenuExampleWindow(Gtk.Window):
                         y = (each_weights[0] - each_weights[1] * x) / each_weights[2]
                 plt.plot(x, y ,color[idx] + "--")
         #print(x, ", ",y)
-
-
 
         plt.draw()
         plt.show()

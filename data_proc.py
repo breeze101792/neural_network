@@ -44,7 +44,8 @@ class data_proc:
             tmp.append(np.array(p))
             # print(p)
         return tmp
-
+    def get_class_middle(self):
+        return list(self.class_table.keys())
     def get_data(self, rate_of_data = 1, is_random = True, approach = "class"):
         self.__data_normalize(approach)
         tmp_data = self.data.copy()
@@ -90,6 +91,7 @@ class data_proc:
                     self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
                     #print([k for k, v in self.class_table.items() if v == each_y])
                     #print("no add ", self.class_table)
+            print("class table\t", self.class_table)
 
         else:
             print("old")
