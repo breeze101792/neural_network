@@ -7,6 +7,7 @@ from perceptron import *
 import numpy as np
 from data_proc import data_proc as dp
 from ploting import paper
+from matplotlib import colors
 
 # color = ["r","b","g","c","m","y","k","w"]
 
@@ -216,7 +217,7 @@ class nNetwork(Gtk.Window):
         info_panel.pack_start(dataset_info_lab, False, False, 0)
         dataset_info_group = Gtk.Table(1, 2, False)
         info_panel.pack_start(dataset_info_group, False, False, 0)
-        self.dataset_info_title_lab = Gtk.Label("FileName:\nData set size:\nClassification number:", xalign=0, yalign=0)
+        self.dataset_info_title_lab = Gtk.Label("FileName:\nData set size:\nDimension:\nClassification number:", xalign=0, yalign=0)
         dataset_info_group.attach(self.dataset_info_title_lab, 0,1,0,1)
         self.dataset_info_msg_lab = Gtk.Label("", xalign=1, yalign=0)
         dataset_info_group.attach(self.dataset_info_msg_lab, 1,2,0,1)
@@ -296,7 +297,7 @@ class nNetwork(Gtk.Window):
         action_group.add_action(action_filesave)
 
         action_run = Gtk.Action("Run", "Run", None, Gtk.STOCK_MEDIA_PLAY)
-        action_run.connect("activate", self.on_clicked_train)
+        action_run.connect("activate", self.on_clicked_run)
         action_group.add_action(action_run)
 
         action_filequit = Gtk.Action("FileQuit", None, None, Gtk.STOCK_QUIT)
@@ -352,12 +353,12 @@ class nNetwork(Gtk.Window):
             self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
 
             #log info
-            self.dataset_info_msg_lab.set_text(dialog.get_filename().split('/')[-1] + " \n" + self.dataset.get_data_size().__str__() + " \n" + self.dataset.get_data_classification_num().__str__() + " ")
+            self.dataset_info_msg_lab.set_text(dialog.get_filename().split('/')[-1] + " \n" + self.dataset.get_data_size().__str__() + " \n" + self.dataset.get_data_dimension().__str__() + " \n" + self.dataset.get_data_classification_num().__str__() + " ")
             self.nninfo.traning.Data_set_size = len(self.training_set[1])
             self.nninfo.testing.Data_set_size = len(self.testing_set[1])
 
             self.ori_paper.resetpaper()
-            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = False),self.dataset.get_class_middle())
+            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = True),self.dataset.get_class_middle())
             self.ori_paper.draw()
 
         elif response == Gtk.ResponseType.CANCEL:
@@ -410,6 +411,50 @@ class nNetwork(Gtk.Window):
         self.traning_draw_paper.draw_2d_point(err, self.dataset.get_class_middle(), 'x')
         self.traning_draw_paper.draw()
         self.log_refresh(pannel="Training")
+        # test 2***************************************************************/
+        if len(self.training_set[0][0]) == 2 and self.nninfo.traning.Error_rate < 1:
+            cm = self.dataset.get_class_middle()
+            self.ori_paper.resetpaper()
+            self.ori_paper.draw_2d_point(self.dataset.get_data(1),cm)
+            density = 100
+
+            x = np.linspace(0,1,density)
+            y = np.linspace(0,1,density)
+            x, y = np.meshgrid(x, y)
+            area_data = []
+            tmp_x = []
+            tmp_y = []
+            tmp_data = []
+
+            for i in x:
+                tmp_x.extend(list(i))
+
+            for i in y:
+                tmp_y.extend(list(i))
+            for i, j in zip(tmp_x, tmp_y):
+                tmp_data.append([i,j])
+
+            z = self.nnetwork.classifier(tmp_data)
+            zp = []
+            for c in z:
+                zp.extend([cm.index(c)])
+            z = zp
+            # print("x len", len(x))
+
+            tmp = []
+            for j in range(len(y)):
+                # print(j * len(x), ", ", j * (len(x)) + len(x) - 1)
+                tmp.append(z[j * density:j * density + density])
+            # print("z", z, ", ", len(tmp), ", ", len(tmp[0]))
+            z = np.vstack(tmp)
+
+            cMap = colors.ListedColormap(["r","b","g","c","m","y","k","w"][0:len(cm)])
+            self.ori_paper.ax.pcolormesh(x,y,z,cmap=cMap, alpha=0.4)
+            self.ori_paper.draw()
+
+
+
+        # *********************************************************************/
 
         # mnn = perceptron(len(self.training_set[0][0]), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
         # mnn.training(self.training_set)
@@ -431,6 +476,9 @@ class nNetwork(Gtk.Window):
         self.testing_draw_paper.draw()
         self.log_refresh(pannel="Testing")
         # print(self.nninfo.testing.Error_rate)
+    def on_clicked_run(self, widget):
+        self.on_clicked_train(widget)
+        self.on_clicked_test(widget)
 
     def on_clicked_draw(self, widget):
         print("draw")
