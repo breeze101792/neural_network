@@ -236,7 +236,7 @@ class nNetwork(Gtk.Window):
         info_panel.pack_start(testing_log_lab, False, False, 0)
         testing_log_group = Gtk.Table(1, 2, False)
         info_panel.pack_start(testing_log_group, False, False, 0)
-        self.testing_title_log_lab = Gtk.Label("Error rate:\nTraning set size:", xalign=0, yalign=0)
+        self.testing_title_log_lab = Gtk.Label("Error rate:\nTesting set size:", xalign=0, yalign=0)
         testing_log_group.attach(self.testing_title_log_lab, 0,1,0,1)
         self.testing_log_msg_lab = Gtk.Label("", xalign=1, yalign=0)
         testing_log_group.attach(self.testing_log_msg_lab, 1,2,0,1)
@@ -356,8 +356,9 @@ class nNetwork(Gtk.Window):
             self.nninfo.traning.Data_set_size = len(self.training_set[1])
             self.nninfo.testing.Data_set_size = len(self.testing_set[1])
 
-            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = False))
-
+            self.ori_paper.resetpaper()
+            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = False),self.dataset.get_class_middle())
+            self.ori_paper.draw()
 
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
@@ -401,9 +402,13 @@ class nNetwork(Gtk.Window):
     def on_clicked_train(self, widget):
         tmp_struct = self.mlp_structure_ety.get_text()
         self.nnetwork = mlp(structure = [int(x) for x in tmp_struct.split(',')], dimension = len(self.training_set[0][0]), err_rate = self.training_err_rate_sb.get_value(),class_middle = self.dataset.get_class_middle(), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-        self.nninfo.traning.Error_rate, self.nninfo.traning.Iteration_times, self.traning_trainsformed_data = self.nnetwork.training(self.training_set)
-        self.traning_draw_paper.draw_2d_point(self.traning_trainsformed_data)
+        self.nninfo.traning.Iteration_times, suc, err = self.nnetwork.training(self.training_set)
+        self.nninfo.traning.Error_rate = len(err[0])/(len(err[0]) + len(suc[0]))
 
+        self.traning_draw_paper.resetpaper()
+        self.traning_draw_paper.draw_2d_point(suc, self.dataset.get_class_middle())
+        self.traning_draw_paper.draw_2d_point(err, self.dataset.get_class_middle(), 'x')
+        self.traning_draw_paper.draw()
         self.log_refresh(pannel="Training")
 
         # mnn = perceptron(len(self.training_set[0][0]), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
@@ -418,8 +423,12 @@ class nNetwork(Gtk.Window):
         # tmp[0] += 1
         # self.best_times_value_lab.set_text(str(tmp))
     def on_clicked_test(self, widget):
-        self.nninfo.testing.Error_rate, self.testing_trainsformed_data = self.nnetwork.get_err_rate(self.testing_set)
-        self.testing_draw_paper.draw_2d_point(self.testing_trainsformed_data)
+        suc, err = self.nnetwork.testing(self.testing_set)
+        self.nninfo.testing.Error_rate = len(err[0])/(len(err[0]) + len(suc[0]))
+        self.testing_draw_paper.resetpaper()
+        self.testing_draw_paper.draw_2d_point(suc, self.dataset.get_class_middle())
+        self.testing_draw_paper.draw_2d_point(err, self.dataset.get_class_middle(), 'x')
+        self.testing_draw_paper.draw()
         self.log_refresh(pannel="Testing")
         # print(self.nninfo.testing.Error_rate)
 

@@ -28,13 +28,13 @@ class paper:
         self.ax.grid(True)
 
     def draw(self):
-        pass
+        self.fig.canvas.draw()
+
         # self.fig.canvas.draw()
         # plt.draw()
         # plt.show()
 
-    def draw_2d_point(self, dataset, shape = '.'):
-        self.resetpaper()
+    def draw_2d_point(self, dataset, class_middle, shape = '.'):
         data_point = dataset[0]
         data_y = dataset[1]
         tmp_point = []
@@ -46,11 +46,9 @@ class paper:
             else:
                 tmp_point[class_list.index(y)][0].append(point[0])
                 tmp_point[class_list.index(y)][1].append(point[1])
-        unsort_class_list = class_list.copy()
-        class_list.sort()
+
         for idx in range(len(class_list)):
-            self.ax.plot(tmp_point[idx][0], tmp_point[idx][1], self.color[class_list.index(unsort_class_list[idx])] + shape)
-        self.fig.canvas.draw()
+            self.ax.plot(tmp_point[idx][0], tmp_point[idx][1], self.color[class_middle.index(class_list[idx])] + shape)
     #draw (point,color, shape)
 
     #TODO
