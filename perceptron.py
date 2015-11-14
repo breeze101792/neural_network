@@ -67,7 +67,6 @@ class cell:
         # self.xs = [-1]
         # self.xs.extend(stimulates)
         #print("start", self.weights, self.xs)
-
         tmp = [-1]
         tmp.extend(stimulates)
         self.xs = np.array(tmp)
@@ -120,6 +119,21 @@ class mlp:
         # self.cells.append(tmp_cell)
         #TODO multilayer
         print(self.cells)
+    def classifier(self, data_set):
+        result_ys = []
+
+        min_c = 0
+        # TODO nedd to be chaned!!!!!!
+        for point in data_set:
+            out = self.__forward(point)[0]
+            # TODO mutilp
+            for c in self.class_middle:
+                if abs(out - min_c) > abs(out - c):
+                    min_c = c
+            result_ys.append(min_c)
+
+        return result_ys
+
     def training(self, training_set):
         print(len(training_set[0]))
         points_set = training_set[0]
@@ -254,29 +268,7 @@ class mlp:
 
     def get_weights(self):
         return self.cells[-1][0].get_weights()
-    # def get_hit_rate(self, testting_set):
-    #     points = testting_set[0]
-    #     ys = testting_set[1]
-    #
-    #     tmp_point = []
-    #     tmp_y = []
-    #     count = 0
-    #     min_c = 0
-    #     for point, y in zip(points, ys):
-    #         out = self.__forward(point)
-    #         # TODO mutilp
-    #         out = out[0]
-    #
-    #         for c in self.class_middle:
-    #             if abs(out - min_c) > abs(out - c):
-    #                 min_c = c
-    #         if y == min_c:
-    #             count += 1
-    #
-    #         tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
-    #         tmp_y.append(y)
-    #
-    #     return count / len(testting_set[0]), (tmp_point, tmp_y)
+
     def testing(self, testting_set):
         points = testting_set[0]
         ys = testting_set[1]
@@ -303,42 +295,10 @@ class mlp:
                 suc_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
                 suc_y.append(y)
 
-
-
         return (suc_point, suc_y), (err_point, err_y)
     def get_err_rate(self, testing_set):
         s,e = self.testing(testing_set)
         return len(e[0])/(len(e[0]) + len(s[0]))
-        # points = testting_set[0]
-        # ys = testting_set[1]
-        #
-        # suc_point = []
-        # suc_y = []
-        #
-        # err_point = []
-        # err_y = []
-        #
-        # count = 0
-        # min_c = 0
-        # for point, y in zip(points, ys):
-        #     out = self.__forward(point)
-        #     # TODO mutilp
-        #     out = out[0]
-        #
-        #     for c in self.class_middle:
-        #         if abs(out - min_c) > abs(out - c):
-        #             min_c = c
-        #     if y != min_c:
-        #         count += 1
-        #         err_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
-        #         err_y.append(y)
-        #     else:
-        #         suc_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
-        #         suc_y.append(y)
-        #
-        #
-        #
-        # return count / len(testting_set[0]), (suc_point, suc_y), (err_point, err_y)
 
 class cell_sigmoid(cell):
     def __init__(self, dimensions = 2, learning_rate = 0.5, lr_coefficent = 1):
