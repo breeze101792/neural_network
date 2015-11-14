@@ -8,7 +8,7 @@ import numpy as np
 from data_proc import data_proc as dp
 from ploting import paper
 
-color = ["r","b","g","c","m","y","k","w"]
+# color = ["r","b","g","c","m","y","k","w"]
 
 class myDict(dict):
 
@@ -51,10 +51,50 @@ UI_INFO = """
   </popup-->
 </ui>
 """
-class MenuExampleWindow(Gtk.Window):
+class info:
+    class traning_data:
+        def __init__(self):
+            self.Iteration_times = 0
+            self.Error_rate = 0
+            self.Data_set_size = 0
+        def reset(self):
+            self.Iteration_times = 0
+            self.Error_rate = 0
+            self.Data_set_size = 0
+    class testing_data:
+        def __init__(self):
+            self.Error_rate = 0
+            self.Data_set_size = 0
+        def reset(self):
+            self.Error_rate = 0
+            self.Data_set_size = 0
     def __init__(self):
-        Gtk.Window.__init__(self, title="Neural Network")
+        self.traning = self.traning_data()
+        self.testing = self.testing_data()
+    def reset(self):
+        self.traning.reset()
+        self.testing.reset()
 
+class nNetwork(Gtk.Window):
+    def __init__(self):
+        self.nnetwork = None
+        self.dimension = 2
+        self.train_mode = True
+        #self.data = []
+        self.weights = []
+        self.class_table = {}
+        self.find_best = False
+        #self.class_num
+        self.dataset = dp()
+        self.training_set = []
+        self.testing_set = []
+        self.traning_trainsformed_data = []
+        self.testing_trainsformed_data = []
+        #log info
+        self.nninfo = info()
+
+        #wait for ui setup
+        Gtk.Window.__init__(self, title="Neural Network")
         self.set_default_size(800, 600)
 
         action_group = Gtk.ActionGroup("my_actions")
@@ -81,7 +121,7 @@ class MenuExampleWindow(Gtk.Window):
         main_ui.pack_start(body_panel, True, True, 0)
 
         #for testing/*********************************************************/
-        settings_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        settings_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing = 10)
         body_panel.attach(settings_panel, 0, 1, 0, 1, xpadding=8, ypadding=8)
 
         settings_lab = Gtk.Label("Settings", xalign=0)
@@ -123,24 +163,28 @@ class MenuExampleWindow(Gtk.Window):
         training_err_rate_group.attach(self.training_err_rate_sb, 1, 2, 0, 1)
         self.training_err_rate_sb.set_value(10)
 
+        # traning_testing_rate_group
+        traning_testing_rate_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(traning_testing_rate_group, False, False, 0)
+        traning_testing_rate_lab = Gtk.Label("Traning & Tesgting\ndata rate(%):", xalign=0)
+        traning_testing_rate_group.attach(traning_testing_rate_lab, 0, 1, 0, 1)
+        traning_testing_rate_adj = Gtk.Adjustment(60, 0, 100, 5, 0, 0)
+        self.traning_testing_rate_sb = Gtk.SpinButton()
+        self.traning_testing_rate_sb.set_alignment(xalign=1)
+        self.traning_testing_rate_sb.set_adjustment(traning_testing_rate_adj)
+        traning_testing_rate_group.attach(self.traning_testing_rate_sb, 1, 2, 0, 1)
+        self.traning_testing_rate_sb.set_value(66)
+
         # mlp structure
         mlp_structure_group = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         settings_panel.pack_start(mlp_structure_group, False, False, 0)
         mlp_structure_lab = Gtk.Label("Specify mlp structure(3,5,1...)", xalign = 0)
         mlp_structure_group.pack_start(mlp_structure_lab, True, True, 0)
         self.mlp_structure_ety = Gtk.Entry()
-        self.mlp_structure_ety.set_text("2,2,1")
+        self.mlp_structure_ety.set_alignment(xalign=1)
+        self.mlp_structure_ety.set_text("2,1")
         mlp_structure_group.pack_start(self.mlp_structure_ety, True, True, 0)
 
-        # #find best
-        # find_best_group = Gtk.Table(1, 2, True)
-        # settings_panel.pack_start(find_best_group, False, False, 0)
-        # test_lab = Gtk.Label("Find Best:", xalign=0)
-        # find_best_group.attach(test_lab, 0,1,0,1)
-        # self.find_best_swh = Gtk.Switch()
-        # self.find_best_swh.connect("notify::active", self.on_find_best_activated)
-        # self.find_best_swh.set_active(False)
-        # find_best_group.attach(self.find_best_swh, 1,2,0,1)
 
         # action buttom
         action_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -150,125 +194,80 @@ class MenuExampleWindow(Gtk.Window):
         tarin_button.connect("clicked", self.on_clicked_train)
         action_group.pack_start(tarin_button, False, False, 0)
 
-        draw_button = Gtk.Button(label = "Draw")
-        draw_button.connect("clicked", self.on_clicked_draw)
-        action_group.pack_start(draw_button, False, False, 0)
+        test_button = Gtk.Button(label = "Test")
+        test_button.connect("clicked", self.on_clicked_test)
+        action_group.pack_start(test_button, False, False, 0)
 
-
-
-        # /*******************************************************************/
-        # listbox = Gtk.ListBox()
-        # listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        # body_panel.attach(listbox, 0, 1, 0, 1)
-
-        #settings pannel
-        #
-        # settings = Gtk.Table(10, 2, True)
-        # body_panel.attach(settings, 0, 1, 0, 1)
-        #
-        # settings_lab = Gtk.Label("Settings")
-        # settings.attach(settings_lab, 0, 2, 0, 1)
-        #
-        # learning_rate_lab = Gtk.Label("Learning rate(0.1):")
-        # settings.attach(learning_rate_lab, 0, 1, 1, 2)
-        #
-        # learning_rate_adj = Gtk.Adjustment(2, 0, 10, 1, 10, 0)
-        # self.learning_rate_sb = Gtk.SpinButton()
-        # self.learning_rate_sb.set_adjustment(learning_rate_adj)
-        # settings.attach(self.learning_rate_sb, 1, 2, 1, 2)
-        # self.learning_rate_sb.set_value(4)
-        #
-        # training_times_lab = Gtk.Label("Traning times:")
-        # settings.attach(training_times_lab, 0, 1, 2, 3)
-        #
-        # training_times_adj = Gtk.Adjustment(50, 0, 10000, 50, 10, 0)
-        # self.training_times_sb = Gtk.SpinButton()
-        # self.training_times_sb.set_adjustment(training_times_adj)
-        # settings.attach(self.training_times_sb, 1, 2, 2, 3)
-        # self.training_times_sb.set_value(100)
-        #
-        # test_lab = Gtk.Label("Find Best:")
-        # settings.attach(test_lab, 0, 1, 3, 4)
-        #
-        # self.find_best_swh = Gtk.Switch()
-        # self.find_best_swh.connect("notify::active", self.on_find_best_activated)
-        # self.find_best_swh.set_active(False)
-        # settings.attach(self.find_best_swh, 1, 2, 3, 4)
-        #
-        #
-        # tarin_button = Gtk.Button(label = "Train")
-        # tarin_button.connect("clicked", self.on_clicked_train)
-        # settings.attach(tarin_button, 0, 1, 9, 10)
-        #
         # draw_button = Gtk.Button(label = "Draw")
         # draw_button.connect("clicked", self.on_clicked_draw)
-        # settings.attach(draw_button, 1, 2, 9, 10)
+        # action_group.pack_start(draw_button, False, False, 0)
 
-        #output pannel
-        nu_log = Gtk.Table(10, 2, True)
-        body_panel.attach(nu_log, 1, 2, 0, 1)
+        # /*******************************************************************/
 
-        log_lab = Gtk.Label("Log", xalign=0)
-        nu_log.attach(log_lab, 0, 2, 0, 1)
+        #info*****************************************************************/
+        info_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing = 10)
+        body_panel.attach(info_panel, 1, 2, 0, 2)
 
-        class_num_lab = Gtk.Label("Class Number:", xalign=0)
-        self.class_num_value_lab = Gtk.Label("0")
-        nu_log.attach(class_num_lab, 0, 1, 1, 2)
-        nu_log.attach(self.class_num_value_lab, 1, 2, 1, 2)
+        info_lab = Gtk.Label("Information", xalign=0)
+        info_panel.pack_start(info_lab, False, False, 0)
 
-        err_rate_lab = Gtk.Label("Error rate:", xalign=0)
-        self.err_rate_value_lab = Gtk.Label("0%")
-        nu_log.attach(err_rate_lab, 0, 1, 2, 3)
-        nu_log.attach(self.err_rate_value_lab, 1, 2, 2, 3)
+        #data info
+        dataset_info_lab = Gtk.Label("#Data Info", xalign=0)
+        info_panel.pack_start(dataset_info_lab, False, False, 0)
+        dataset_info_group = Gtk.Table(1, 2, False)
+        info_panel.pack_start(dataset_info_group, False, False, 0)
+        self.dataset_info_title_lab = Gtk.Label("FileName:\nData set size:\nClassification number:", xalign=0, yalign=0)
+        dataset_info_group.attach(self.dataset_info_title_lab, 0,1,0,1)
+        self.dataset_info_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        dataset_info_group.attach(self.dataset_info_msg_lab, 1,2,0,1)
 
-        itimes_lab = Gtk.Label("Iteration Times:", xalign=0)
-        self.itimes_value_lab = Gtk.Label("0")
-        nu_log.attach(itimes_lab, 0, 1, 3, 4)
-        nu_log.attach(self.itimes_value_lab, 1, 2, 3, 4)
+        #taning log
+        traning_log_lab = Gtk.Label("#Traning Log", xalign=0)
+        info_panel.pack_start(traning_log_lab, False, False, 0)
+        traning_log_group = Gtk.Table(1, 2, False)
+        info_panel.pack_start(traning_log_group, False, False, 0)
+        self.traning_log_title_lab = Gtk.Label("Error rate:\nTraning set size:\nIteration times:", xalign=0, yalign=0)
+        traning_log_group.attach(self.traning_log_title_lab, 0,1,0,1)
+        self.traning_log_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        traning_log_group.attach(self.traning_log_msg_lab, 1,2,0,1)
 
-        num_data_lab = Gtk.Label("Number of data:", xalign=0)
-        self.num_data_value_lab = Gtk.Label("0")
-        nu_log.attach(num_data_lab, 0, 1, 4, 5)
-        nu_log.attach(self.num_data_value_lab, 1, 2, 4, 5)
+        #testing log
+        testing_log_lab = Gtk.Label("#Testing Log", xalign=0, yalign=0)
+        info_panel.pack_start(testing_log_lab, False, False, 0)
+        testing_log_group = Gtk.Table(1, 2, False)
+        info_panel.pack_start(testing_log_group, False, False, 0)
+        self.testing_title_log_lab = Gtk.Label("Error rate:\nTraning set size:", xalign=0, yalign=0)
+        testing_log_group.attach(self.testing_title_log_lab, 0,1,0,1)
+        self.testing_log_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        testing_log_group.attach(self.testing_log_msg_lab, 1,2,0,1)
 
-        best_times_lab = Gtk.Label("Best result:", xalign=0)
-        self.best_times_value_lab = Gtk.Label("(0, 0)")
-        nu_log.attach(best_times_lab, 0, 1, 5, 6)
-        nu_log.attach(self.best_times_value_lab, 1, 2, 5, 6)
-        '''
-        num_data_lab = Gtk.Label("Number of data:")
-        self.num_data_value_lab = Gtk.Label("0")
-        nu_log.attach(num_data_lab, 0, 1, 6, 7)
-        nu_log.attach(self.num_data_value_lab, 1, 2, 6, 7)
-        '''
-        #image pannel
-        # self.ui_img_panel(body_panel)
-        # self.ori_pixbuf = Pixbuf.new
         ori_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(ori_draw_panel, 2, 4, 0, 1)
+        info_panel.pack_start(ori_draw_panel, True, True, 0)
 
         self.ori_paper = paper()
         ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
 
-        nned_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(nned_draw_panel, 2, 4, 1, 2)
+        # *********************************************************************/
+        #drawing
+        traning_draw_draw_panel = Gtk.Box(10, 2, True)
+        body_panel.attach(traning_draw_draw_panel, 2, 4, 0, 1)
 
-        self.nned_paper = paper()
-        nned_draw_panel.pack_start(self.nned_paper.canvas, True, True, 0)
-        self.nned_paper.resetpaper()
+        self.traning_draw_paper = paper()
+        traning_draw_draw_panel.pack_start(self.traning_draw_paper.canvas, True, True, 0)
+        self.traning_draw_paper.resetpaper()
 
-        #wait for ui setup
-        self.dimension = 2
-        self.train_mode = True
-        #self.data = []
-        self.weights = []
-        self.class_table = {}
-        self.find_best = False
-        #self.class_num
-        self.dataset = dp()
-        self.training_set = []
-        self.testing_set = []
-        self.trainsformed_data = []
+
+
+        testing_draw_draw_panel = Gtk.Box(10, 2, True)
+        body_panel.attach(testing_draw_draw_panel, 2, 4, 1, 2)
+
+        self.testing_draw_paper = paper()
+        testing_draw_draw_panel.pack_start(self.testing_draw_paper.canvas, True, True, 0)
+        self.testing_draw_paper.resetpaper()
+
+        #post init
+        self.log_refresh()
+
         # self.classifier = None
     def add_file_menu_actions(self, action_group):
         action_filemenu = Gtk.Action("FileMenu", "File", None, None)
@@ -337,18 +336,29 @@ class MenuExampleWindow(Gtk.Window):
         response = dialog.run()
 
         if response == Gtk.ResponseType.OK:
+            #reset
+            self.testing_draw_paper.resetpaper()
+            self.nninfo.reset()
+            self.log_refresh()
+
             print("Open clicked")
             print("File selected: " + dialog.get_filename())
+            print(self.traning_testing_rate_sb.get_value() / 100)
             self.dataset.set_file_name(dialog.get_filename())
             self.dataset.open_file()
-            self.training_set = self.dataset.get_data(1)
+            self.training_set = self.dataset.get_data(self.traning_testing_rate_sb.get_value() / 100)
             self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
-            self.testing_set = self.training_set
-            # print(self.training_set)
-            self.ori_paper.draw_2d_point(self.training_set)
-            # self.training_set = self.dataset.get_data(0.3)
-            # self.testing_set = self.dataset.get_another_data(self.training_set[0])
-            #print(f.readline())
+            self.testing_set = self.dataset.get_data(1 - self.traning_testing_rate_sb.get_value() / 100)
+            self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+
+            #log info
+            self.dataset_info_msg_lab.set_text(dialog.get_filename().split('/')[-1] + " \n" + self.dataset.get_data_size().__str__() + " \n" + self.dataset.get_data_classification_num().__str__() + " ")
+            self.nninfo.traning.Data_set_size = len(self.training_set[1])
+            self.nninfo.testing.Data_set_size = len(self.testing_set[1])
+
+            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = False))
+
+
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
         #print(self.data, ", ", self.class_table, ", ", tmp_table)
@@ -374,19 +384,27 @@ class MenuExampleWindow(Gtk.Window):
             self.find_best = True
         else:
             self.find_best = False
+
+    def log_refresh(self, widget = None, pannel="ALL"):
+        tmp_str = ""
+        if pannel == "ALL":
+            tmp_str = format(self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
+            self.traning_log_msg_lab.set_text(tmp_str)
+            tmp_str = format(self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
+            self.testing_log_msg_lab.set_text(tmp_str)
+        elif pannel == "Testing":
+            tmp_str = format(self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
+            self.testing_log_msg_lab.set_text(tmp_str)
+        elif pannel == "Training":
+            tmp_str = format(self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
+            self.traning_log_msg_lab.set_text(tmp_str)
     def on_clicked_train(self, widget):
         tmp_struct = self.mlp_structure_ety.get_text()
+        self.nnetwork = mlp(structure = [int(x) for x in tmp_struct.split(',')], dimension = len(self.training_set[0][0]), err_rate = self.training_err_rate_sb.get_value(),class_middle = self.dataset.get_class_middle(), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
+        self.nninfo.traning.Error_rate, self.nninfo.traning.Iteration_times, self.traning_trainsformed_data = self.nnetwork.training(self.training_set)
+        self.traning_draw_paper.draw_2d_point(self.traning_trainsformed_data)
 
-        print()
-        nn = mlp(structure = [int(x) for x in tmp_struct.split(',')], dimension = len(self.training_set[0][0]), err_rate = self.training_err_rate_sb.get_value(),class_middle = self.dataset.get_class_middle(), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-        self.trainsformed_data = nn.training(self.training_set)
-        err, self.trainsformed_data = nn.get_err_rate(self.testing_set)
-        self.err_rate_value_lab.set_text(str(err * 100) + "%")
-        self.weights = [nn.get_weights()]
-
-        self.nned_paper.draw_2d_point(self.trainsformed_data)
-
-
+        self.log_refresh(pannel="Training")
 
         # mnn = perceptron(len(self.training_set[0][0]), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
         # mnn.training(self.training_set)
@@ -399,6 +417,11 @@ class MenuExampleWindow(Gtk.Window):
         # tmp = mnn.get_best_result()
         # tmp[0] += 1
         # self.best_times_value_lab.set_text(str(tmp))
+    def on_clicked_test(self, widget):
+        self.nninfo.testing.Error_rate, self.testing_trainsformed_data = self.nnetwork.get_err_rate(self.testing_set)
+        self.testing_draw_paper.draw_2d_point(self.testing_trainsformed_data)
+        self.log_refresh(pannel="Testing")
+        # print(self.nninfo.testing.Error_rate)
 
     def on_clicked_draw(self, widget):
         print("draw")
@@ -407,13 +430,11 @@ class MenuExampleWindow(Gtk.Window):
         draw_thread.join()
         #self.draw_2dfig()
 
-
-
     def draw_2dfig(self):
         plt.ion()
-        points = self.trainsformed_data[0]
+        points = self.testing_trainsformed_data[0]
         # points = self.training_set[0]
-        ys = self.trainsformed_data[1]
+        ys = self.testing_trainsformed_data[1]
         for point, y in zip(points, ys):
             # print("point,y-<\t", point, ", ", y)
             if y == 0.75:
@@ -496,7 +517,7 @@ class MenuExampleWindow(Gtk.Window):
     #         return True # event has been handled
 
 def main():
-    window = MenuExampleWindow()
+    window = nNetwork()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
     Gtk.main()

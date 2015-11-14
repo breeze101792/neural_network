@@ -46,13 +46,13 @@ class data_proc:
                 # print([float(x) for x in line.split()])
                 for idx_d, each_x in enumerate(tmp_list[0:-1]):
                     each_x = float(each_x)
-                    print("mm a\t", self.max_min[idx_d])
-                    print("each_x\t", each_x)
+                    # print("mm a\t", self.max_min[idx_d])
+                    # print("each_x\t", each_x)
                     if self.max_min[idx_d][0] > each_x:
                         self.max_min[idx_d][0] = each_x
                     if self.max_min[idx_d][1] < each_x:
                         self.max_min[idx_d][1] = each_x
-                    print("mm b\t", self.max_min[idx_d])
+                    # print("mm b\t", self.max_min[idx_d])
 
                 self.data.append([float(x) for x in tmp_list[0:-1]])
                 self.ys.append(float(tmp_list[-1]))
@@ -85,10 +85,10 @@ class data_proc:
             return sub_dataset, sub_ys
         elif not is_random:
             return self.data, self.nom_ys
-    def get_another_data(self, part_of_data):
+    def get_another_ndata(self, part_of_data):
         sub_dataset = []
         sub_ys = []
-        for point, y in zip(self.data, self.ys):
+        for point, y in zip(self.nom_data, self.nom_ys):
             if point not in part_of_data:
                 sub_dataset.append(point)
                 sub_ys.append(y)
@@ -102,7 +102,7 @@ class data_proc:
             self.nom_ys = []
             distance = 1 / (self.class_num * 2)
             class_middle = distance
-            print("max_min\t", self.max_min)
+            # print("max_min\t", self.max_min)
             for idx_data in range(len(self.data)):
                 # print("data\t", self.data[idx_data])
                 tmp_data = []
@@ -122,7 +122,7 @@ class data_proc:
                     self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
                     #print([k for k, v in self.class_table.items() if v == each_y])
                     #print("no add ", self.class_table)
-            print("class table\t", self.class_table)
+            # print("class table\t", self.class_table)
 
         else:
             print("old")
@@ -139,13 +139,16 @@ class data_proc:
                     self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
                     #print([k for k, v in self.class_table.items() if v == each_y])
                     #print("no add ", self.class_table)
-
+    def get_data_size(self):
+        return len(self.data)
+    def get_data_classification_num(self):
+        return len(self.class_table)
 def main():
     print("dataset class test")
     data = data_proc('/home/shaowu/code/neural_network/dataset/2Ccircle1.txt')
     data.open_file()
     print(data.class_num)
-    print(data.get_data())
+    print(data.get_data_size())
     # print(data_proc.to_ndata(data.get_data()[0]))
     #print(data.nom_ys)
     #print(data.data, "\n", data.class_table, "\n", data.ys, "\n", data.get_data(is_random = True))

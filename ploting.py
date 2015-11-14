@@ -14,12 +14,15 @@ class paper:
         # self.fig = plt.figure()
 
         self.fig = Figure(figsize = unit_xy, dpi=100)
+        self.fig.patch.set_facecolor('none')
+
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvas(self.fig)
         self.resetpaper()
 
     def resetpaper(self):
         self.ax.cla()
+        self.ax.patch.set_alpha(0)
         # self.ax.set_xlim(0,10)
         # self.ax.set_ylim(0,10)
         self.ax.grid(True)
@@ -45,10 +48,11 @@ class paper:
                 tmp_point[class_list.index(y)][1].append(point[1])
 
         for idx in range(len(class_list)):
-            self.ax.plot(tmp_point[idx][0], tmp_point[idx][1], self.color[idx] + "o")
+            self.ax.plot(tmp_point[idx][0], tmp_point[idx][1], self.color[idx] + "*")
         self.fig.canvas.draw()
     #TODO
     def draw_2d_line(self, slope, bias):
+        pass
         # if self.weights == 1:
         #     x = np.linspace(plt.xlim()[0], plt.xlim()[1], 2)
         #     y = np.linspace(plt.ylim()[0], plt.ylim()[1], 2)
