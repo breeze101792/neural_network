@@ -191,8 +191,8 @@ class mlp:
                 tmp_o.append(ds)
             mes = mse / len(training_set[0])
             suc, err  = self.testing(training_set)
-            # print("err\t", err_tmp, ", " , self.err_rate)
-            if len(err[0])/(len(err[0]) + len(suc[0])) * 100 < self.err_rate:
+            # print("it, err\t", it, len(err[0])/(len(err[0]) + len(suc[0])) * 100, ", " , self.err_rate)
+            if len(err[0])/(len(err[0]) + len(suc[0])) * 100 <= self.err_rate:
                 self.itimes = it + 1
                 return self.itimes, suc, err
             # print("mse\t", mse)
@@ -248,7 +248,10 @@ class mlp:
                 #TODO check delta list
                 sigma_dk_wkj = 0
                 # print("delta", delta)
-                for cell_k, each_delta_k in zip(self.cells[idx + 1], delta[0]):
+                for cell_k, each_delta_k in zip(self.cells[layer_idx + 1], delta[0]):
+                    print(layer_idx, ", ", cell_idx,  ", ", len(self.cells[layer_idx]))
+                    print("idx", cell_idx + 1)
+                    print("weight", len(cell_k.get_weights()))
                     sigma_dk_wkj += each_delta_k * cell_k.get_weights()[cell_idx + 1]
                 delta_j.append(cell_j.get_last_y() * (1 - cell_j.get_last_y()) * sigma_dk_wkj)
             # print("delta_j", delta_j)
@@ -329,16 +332,22 @@ class cell_sigmoid(cell):
         # elif self.y >= 0:
         #     self.weights = self.weights - self.xs * self.learning_rate
 
-        # if delta > 0:
-        #     if self.dirrection < 0:
-        #         self.learning_rate = self.learning_rate * self.lr_coefficent
-        #     self.dirrection = 1
-        # elif delta < 0:
-        #     if self.dirrection > 0:
-        #         self.learning_rate = self.learning_rate * self.lr_coefficent
-        #     self.dirrection == -1
-
         delta = np.array(delta)
+
+        if sum(delta * self.xs) > 0:
+            if self.dirrection < 0:
+                self.learning_rate = self.learning_rate * self.lr_coefficent
+            else:
+                self.learning_rate = self.learning_rate / self.lr_coefficent
+            self.dirrection = 1
+        elif sum(delta * self.xs) < 0:
+            if self.dirrection > 0:
+                self.learning_rate = self.learning_rate * self.lr_coefficent
+            else:
+                self.learning_rate = self.learning_rate / self.lr_coefficent
+            self.dirrection == -1
+
+
         self.weights = self.weights + self.learning_rate * delta * self.xs
 
         # status
