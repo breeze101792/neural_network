@@ -132,6 +132,9 @@ class mlp:
                     min_c = c
             result_ys.append(min_c)
 
+            # tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+            # tmp_o.append(out)
+
         return result_ys
 
     def training(self, training_set):
@@ -146,6 +149,7 @@ class mlp:
         mse = 1
         tmp_mse = 0
         feedback_flag = False
+        err_flag = False
         for it in range(self.training_times):
             tmp_point = []
             tmp_o = []
@@ -167,7 +171,7 @@ class mlp:
 
                 feedback_flag = True
                 for idx in range(len(self.cells[-1])):
-                    min_c = 5
+                    min_c = self.class_middle[0]
                     for c in self.class_middle:
                         if abs(os[idx] - min_c) > abs(os[idx] - c):
                             min_c = c
@@ -180,6 +184,13 @@ class mlp:
 
                 if feedback_flag:
                     self.__backward(ds, os)
+
+                # elif err_flag:
+                #     print("point , y", point, ", ",  ds)
+                #     print("lastest_weight\t", self.cells[-1][0].get_weights())
+                #     print("hid1_weight\t", self.cells[-2][0].get_last_y)
+                #     print("hid2_weight\t", self.cells[-2][1].get_last_y)
+
                     # tmp = self.get_hit_rate(training_set)[0]
                     # if tmp == 0:
                     #     print("err, it, idx", tmp, it, idx)
@@ -191,8 +202,9 @@ class mlp:
                 tmp_o.append(ds)
             mes = mse / len(training_set[0])
             suc, err  = self.testing(training_set)
-            print("it, err\t", it, len(err[0])/(len(err[0]) + len(suc[0])) * 100, ", " , self.err_rate)
+            # print("it, err\t", it, len(err[0])/(len(err[0]) + len(suc[0])) * 100, ", " , self.err_rate)
             if len(err[0])/(len(err[0]) + len(suc[0])) * 100 <= self.err_rate:
+                # err_flag = True
                 self.itimes = it + 1
                 return self.itimes, suc, err
             # print("mse\t", mse)
@@ -287,17 +299,17 @@ class mlp:
             out = self.__forward(point)
             # TODO mutilp
             out = out[0]
-            print("ds, ys\t", y, out)
+            # print()
 
             for c in self.class_middle:
                 if abs(out - min_c) > abs(out - c):
                     min_c = c
-            print("jy\t", min_c)
+            # print("ds, ys, jy\t", y, out, min_c)
             if y != min_c:
-                err_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+                err_point.append([self.cells[-2][0].get_last_y(), self.cells[-2][1].get_last_y()])
                 err_y.append(y)
             else:
-                suc_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
+                suc_point.append([self.cells[-2][0].get_last_y(), self.cells[-2][1].get_last_y()])
                 suc_y.append(y)
 
         return (suc_point, suc_y), (err_point, err_y)
@@ -336,18 +348,18 @@ class cell_sigmoid(cell):
 
         delta = np.array(delta)
 
-        if sum(delta * self.xs) > 0:
-            if self.dirrection < 0:
-                self.learning_rate = self.learning_rate * self.lr_coefficent
-            else:
-                self.learning_rate = self.learning_rate / self.lr_coefficent
-            self.dirrection = 1
-        elif sum(delta * self.xs) < 0:
-            if self.dirrection > 0:
-                self.learning_rate = self.learning_rate * self.lr_coefficent
-            else:
-                self.learning_rate = self.learning_rate / self.lr_coefficent
-            self.dirrection == -1
+        # if sum(delta * self.xs) > 0:
+        #     if self.dirrection < 0:
+        #         self.learning_rate = self.learning_rate * self.lr_coefficent
+        #     else:
+        #         self.learning_rate = self.learning_rate / self.lr_coefficent
+        #     self.dirrection = 1
+        # elif sum(delta * self.xs) < 0:
+        #     if self.dirrection > 0:
+        #         self.learning_rate = self.learning_rate * self.lr_coefficent
+        #     else:
+        #         self.learning_rate = self.learning_rate / self.lr_coefficent
+        #     self.dirrection == -1
 
 
         self.weights = self.weights + self.learning_rate * delta * self.xs
