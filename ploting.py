@@ -8,25 +8,29 @@ import numpy as np
 from matplotlib.figure import Figure
 #draw 2d: points, lines, axises
 class paper:
-    def __init__(self, unit_xy = (10, 10)):
+    def __init__(self, unit_xy = (10, 10), title = ""):
         self.color = ["r","b","g","c","m","y","k","w"]
         self.data = None
         # self.fig = plt.figure()
 
-        self.fig = Figure(figsize = unit_xy, dpi=100)
+        self.fig = Figure(figsize = unit_xy, dpi=80)
         self.fig.patch.set_facecolor('none')
 
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvas(self.fig)
+        self.title = title
         self.resetpaper()
 
     def resetpaper(self):
         self.ax.cla()
         self.ax.patch.set_alpha(0)
-        # self.ax.set_xlim(0,10)
-        # self.ax.set_ylim(0,10)
+        self.ax.set_title(self.title)
+        # self.ax.set_xlim(-0.02,1.02)
+        # self.ax.set_ylim(-0.02,1.02)
         self.ax.grid(True)
-
+    def expend_lim(self, v = 0.02):
+        self.ax.set_xlim(self.ax.get_xlim()[0]-v,self.ax.get_xlim()[1]+v)
+        self.ax.set_ylim(self.ax.get_ylim()[0]-v,self.ax.get_ylim()[1]+v)
     def draw(self):
         self.fig.canvas.draw()
 
@@ -50,6 +54,25 @@ class paper:
         for idx in range(len(class_list)):
             self.ax.plot(tmp_point[idx][0], tmp_point[idx][1], self.color[class_middle.index(class_list[idx])] + shape)
     #draw (point,color, shape)
+    def draw_2d_area(self, dataset):
+        self.ax.pcolor(dataset[0][0], dataset[0][1], dataset[1], cmap='RdBu')
+        # x = linspace(0, map.urcrnrx, data.shape[1])
+        # y = linspace(0, map.urcrnry, data.shape[0])
+        # xx, yy = meshgrid(x, y)
+
+
+
+
+
+        # a1 = np.linspace(0,100,40)
+        # a2 = np.linspace(30,100,40)
+        #
+        # x = np.arange(0, len(a1), 1)
+        #
+        # self.ax.fill_between(x, 0, a1, facecolor='green')
+        # self.ax.fill_between(x, a1, a2, facecolor='red')
+        #
+        # self.ax.fill_between([1],0,[0],facecolor='green')
 
     #TODO
     def draw_2d_line(self, slope, bias):
@@ -111,8 +134,10 @@ def main():
     data = dp('/home/shaowu/code/neural_network/dataset/2Ccircle1.txt')
     data.open_file()
     p = paper()
-    p.draw_2d_point(data.get_data())
+    p.draw_2d_point(data.get_data(),data.get_class_middle())
+    p.draw_2d_area(data.get_data())
     p.draw()
+
 
     mc = MainClass(p.canvas)
 

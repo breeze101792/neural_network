@@ -4,6 +4,8 @@ import numpy as np
 import math
 import random
 from data_proc import data_proc as dp
+from ploting import paper
+import threading
 
 class cell:
     def __init__(self, dimensions = 2, learning_rate = 0.4, lr_coefficent = 1):
@@ -102,6 +104,11 @@ class mlp:
         self.numofoutput = 1
         self.numofclass = len(class_middle)
         self.struct_init()
+
+        # tmp
+        self.mse = 0
+    def get_mse(self):
+        return self.mse
     def struct_init(self):
         self.cells = []
         tmp_cell = []
@@ -137,7 +144,7 @@ class mlp:
 
         return result_ys
 
-    def training(self, training_set):
+    def training(self, training_set, tpaper, drawf):
         print(len(training_set[0]))
         points_set = training_set[0]
         expected_output_set = training_set[1]
@@ -146,14 +153,14 @@ class mlp:
 
         tmp_point = []
         tmp_y = []
-        mse = 1
-        tmp_mse = 0
+        # self.mse = 1
+        # tmp_mse = 0
         feedback_flag = False
         err_flag = False
         for it in range(self.training_times):
             tmp_point = []
             tmp_o = []
-            mse = 0
+            # self.mse = 0
             for point, ds in zip(points_set, expected_output_set):
                 # self.__backward([y], self.__forward(point))
                 # print("point, d ->\t", point,", ",ds)
@@ -162,11 +169,11 @@ class mlp:
                 os = self.__forward(point)
                 # print("os-before ->\t", os)
 
-                #mse
+
                 # tmp_mse = 0
                 # for idx in range(len(self.cells[-1])):
-                #     tmp_mse += (ys[idx] - os[idx]) * (ys[idx] - os[idx])
-                # mse += tmp_mse
+                #     tmp_mse += (ds[idx] - os[idx]) * (ds[idx] - os[idx])
+                # self.mse += tmp_mse
 
 
                 feedback_flag = True
@@ -200,13 +207,18 @@ class mlp:
                 # print("end!\n")
                 tmp_point.append([self.cells[0][0].get_last_y(), self.cells[0][1].get_last_y()])
                 tmp_o.append(ds)
-            mes = mse / len(training_set[0])
+            # self.mse = self.mse / len(training_set[0])
             suc, err  = self.testing(training_set)
             # print("it, err\t", it, len(err[0])/(len(err[0]) + len(suc[0])) * 100, ", " , self.err_rate)
             if len(err[0])/(len(err[0]) + len(suc[0])) * 100 <= self.err_rate:
                 # err_flag = True
                 self.itimes = it + 1
                 return self.itimes, suc, err
+            else:
+                draw_thread = threading.Thread(target=drawf(tpaper, suc, err, self.class_middle))
+                draw_thread.start()
+                draw_thread.join()
+
             # print("mse\t", mse)
             # if self.mse_max > mse:
             #     return tmp_point, tmp_y

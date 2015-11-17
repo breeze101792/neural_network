@@ -143,6 +143,8 @@ class data_proc:
         return len(self.data)
     def get_data_classification_num(self):
         return len(self.class_table)
+    def get_data_dimension(self):
+        return len(self.data[0])
 def main():
     print("dataset class test")
     data = data_proc('/home/shaowu/code/neural_network/dataset/2Ccircle1.txt')

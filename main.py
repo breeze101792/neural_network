@@ -96,7 +96,7 @@ class nNetwork(Gtk.Window):
 
         #wait for ui setup
         Gtk.Window.__init__(self, title="Neural Network")
-        self.set_default_size(800, 600)
+        self.set_default_size(800, 700)
 
         action_group = Gtk.ActionGroup("my_actions")
 
@@ -118,51 +118,19 @@ class nNetwork(Gtk.Window):
         main_ui.pack_start(toolbar, False, False, 0)
 
         # body pannel settings
-        body_panel = Gtk.Table(2, 4, True)
+        body_panel = Gtk.Table(2, 3, True)
         main_ui.pack_start(body_panel, True, True, 0)
 
         #for testing/*********************************************************/
         settings_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing = 10)
-        body_panel.attach(settings_panel, 0, 1, 0, 1, xpadding=8, ypadding=8)
+        body_panel.attach(settings_panel, 0, 1, 0, 2, xpadding=8, ypadding=8)
 
         settings_lab = Gtk.Label("Settings", xalign=0)
         settings_panel.pack_start(settings_lab, False, False, 0)
 
-        # learning rate
-        learning_rate_group = Gtk.Table(1, 2, True)
-        settings_panel.pack_start(learning_rate_group, False, False, 0)
-        learning_rate_lab = Gtk.Label("Learning rate(0.1):", xalign=0)
-        learning_rate_group.attach(learning_rate_lab, 0, 1, 0, 1)
-        learning_rate_adj = Gtk.Adjustment(2, 0, 10, 1, 10, 0)
-        self.learning_rate_sb = Gtk.SpinButton()
-        self.learning_rate_sb.set_alignment(xalign=1)
-        self.learning_rate_sb.set_adjustment(learning_rate_adj)
-        learning_rate_group.attach(self.learning_rate_sb, 1, 2, 0, 1)
-        self.learning_rate_sb.set_value(4)
-
-        # traning times
-        training_times_group = Gtk.Table(1, 2, True)
-        settings_panel.pack_start(training_times_group, False, False, 0)
-        training_times_lab = Gtk.Label("Traning times:", xalign=0)
-        training_times_group.attach(training_times_lab, 0, 1, 0, 1)
-        training_times_adj = Gtk.Adjustment(50, 0, 10000, 20, 0, 0)
-        self.training_times_sb = Gtk.SpinButton()
-        self.training_times_sb.set_alignment(xalign=1)
-        self.training_times_sb.set_adjustment(training_times_adj)
-        training_times_group.attach(self.training_times_sb, 1, 2, 0, 1)
-        self.training_times_sb.set_value(50)
-
-        # training_err_rate_group
-        training_err_rate_group = Gtk.Table(1, 2, True)
-        settings_panel.pack_start(training_err_rate_group, False, False, 0)
-        training_err_rate_lab = Gtk.Label("Traning error rate(%):", xalign=0)
-        training_err_rate_group.attach(training_err_rate_lab, 0, 1, 0, 1)
-        training_err_rate_adj = Gtk.Adjustment(10, 0, 100, 5, 0, 0)
-        self.training_err_rate_sb = Gtk.SpinButton()
-        self.training_err_rate_sb.set_alignment(xalign=1)
-        self.training_err_rate_sb.set_adjustment(training_err_rate_adj)
-        training_err_rate_group.attach(self.training_err_rate_sb, 1, 2, 0, 1)
-        self.training_err_rate_sb.set_value(10)
+        # data settings *******************************************************/
+        data_settings_lab = Gtk.Label("Data Settings", xalign=0)
+        settings_panel.pack_start(data_settings_lab, False, False, 0)
 
         # traning_testing_rate_group
         traning_testing_rate_group = Gtk.Table(1, 2, True)
@@ -175,6 +143,60 @@ class nNetwork(Gtk.Window):
         self.traning_testing_rate_sb.set_adjustment(traning_testing_rate_adj)
         traning_testing_rate_group.attach(self.traning_testing_rate_sb, 1, 2, 0, 1)
         self.traning_testing_rate_sb.set_value(66)
+
+        # action buttom
+        data_action_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        settings_panel.pack_start(data_action_group, False, False, 0)
+
+        generate_button = Gtk.Button(label = "generate")
+        generate_button.connect("clicked", self.on_clicked_generate)
+        data_action_group.pack_start(generate_button, False, False, 0)
+
+        # test_button = Gtk.Button(label = "Test")
+        # test_button.connect("clicked", self.on_clicked_test)
+        # data_action_group.pack_start(test_button, False, False, 0)
+
+        # network settings*****************************************************
+        nn_settings_lab = Gtk.Label("Network Settings", xalign=0)
+        settings_panel.pack_start(nn_settings_lab, False, False, 0)
+
+        # learning rate
+        learning_rate_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(learning_rate_group, False, False, 0)
+        learning_rate_lab = Gtk.Label("Learning rate(0.1):", xalign=0)
+        learning_rate_group.attach(learning_rate_lab, 0, 1, 0, 1)
+        learning_rate_adj = Gtk.Adjustment(2, 0, 100, 1, 10, 0)
+        self.learning_rate_sb = Gtk.SpinButton()
+        self.learning_rate_sb.set_alignment(xalign=1)
+        self.learning_rate_sb.set_adjustment(learning_rate_adj)
+        learning_rate_group.attach(self.learning_rate_sb, 1, 2, 0, 1)
+        self.learning_rate_sb.set_value(6)
+
+        # traning times
+        training_times_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(training_times_group, False, False, 0)
+        training_times_lab = Gtk.Label("Traning times:", xalign=0)
+        training_times_group.attach(training_times_lab, 0, 1, 0, 1)
+        training_times_adj = Gtk.Adjustment(50, 0, 10000, 20, 0, 0)
+        self.training_times_sb = Gtk.SpinButton()
+        self.training_times_sb.set_alignment(xalign=1)
+        self.training_times_sb.set_adjustment(training_times_adj)
+        training_times_group.attach(self.training_times_sb, 1, 2, 0, 1)
+        self.training_times_sb.set_value(100)
+
+        # training_err_rate_group
+        training_err_rate_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(training_err_rate_group, False, False, 0)
+        training_err_rate_lab = Gtk.Label("Traning error rate(%):", xalign=0)
+        training_err_rate_group.attach(training_err_rate_lab, 0, 1, 0, 1)
+        training_err_rate_adj = Gtk.Adjustment(10, 0, 100, 5, 0, 0)
+        self.training_err_rate_sb = Gtk.SpinButton()
+        self.training_err_rate_sb.set_alignment(xalign=1)
+        self.training_err_rate_sb.set_adjustment(training_err_rate_adj)
+        training_err_rate_group.attach(self.training_err_rate_sb, 1, 2, 0, 1)
+        self.training_err_rate_sb.set_value(5)
+
+
 
         # mlp structure
         mlp_structure_group = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -199,6 +221,10 @@ class nNetwork(Gtk.Window):
         test_button.connect("clicked", self.on_clicked_test)
         action_group.pack_start(test_button, False, False, 0)
 
+        # draw_button = Gtk.Button(label = "draw")
+        # draw_button.connect("clicked", self.draw_2dfig())
+        # action_group.pack_start(draw_button, False, False, 0)
+
         # draw_button = Gtk.Button(label = "Draw")
         # draw_button.connect("clicked", self.on_clicked_draw)
         # action_group.pack_start(draw_button, False, False, 0)
@@ -219,7 +245,7 @@ class nNetwork(Gtk.Window):
         info_panel.pack_start(dataset_info_group, False, False, 0)
         self.dataset_info_title_lab = Gtk.Label("FileName:\nData set size:\nDimension:\nClassification number:", xalign=0, yalign=0)
         dataset_info_group.attach(self.dataset_info_title_lab, 0,1,0,1)
-        self.dataset_info_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        self.dataset_info_msg_lab = Gtk.Label("", xalign=0, yalign=0)
         dataset_info_group.attach(self.dataset_info_msg_lab, 1,2,0,1)
 
         #taning log
@@ -227,9 +253,9 @@ class nNetwork(Gtk.Window):
         info_panel.pack_start(traning_log_lab, False, False, 0)
         traning_log_group = Gtk.Table(1, 2, False)
         info_panel.pack_start(traning_log_group, False, False, 0)
-        self.traning_log_title_lab = Gtk.Label("Error rate:\nTraning set size:\nIteration times:", xalign=0, yalign=0)
+        self.traning_log_title_lab = Gtk.Label("Accuracy rate:\nTraning set size:\nIteration times:", xalign=0, yalign=0)
         traning_log_group.attach(self.traning_log_title_lab, 0,1,0,1)
-        self.traning_log_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        self.traning_log_msg_lab = Gtk.Label("", xalign=0, yalign=0)
         traning_log_group.attach(self.traning_log_msg_lab, 1,2,0,1)
 
         #testing log
@@ -237,32 +263,32 @@ class nNetwork(Gtk.Window):
         info_panel.pack_start(testing_log_lab, False, False, 0)
         testing_log_group = Gtk.Table(1, 2, False)
         info_panel.pack_start(testing_log_group, False, False, 0)
-        self.testing_title_log_lab = Gtk.Label("Error rate:\nTesting set size:", xalign=0, yalign=0)
+        self.testing_title_log_lab = Gtk.Label("Accuracy rate:\nTesting set size:", xalign=0, yalign=0)
         testing_log_group.attach(self.testing_title_log_lab, 0,1,0,1)
-        self.testing_log_msg_lab = Gtk.Label("", xalign=1, yalign=0)
+        self.testing_log_msg_lab = Gtk.Label("", xalign=0, yalign=0)
         testing_log_group.attach(self.testing_log_msg_lab, 1,2,0,1)
 
         ori_draw_panel = Gtk.Box(10, 2, True)
         info_panel.pack_start(ori_draw_panel, True, True, 0)
 
-        self.ori_paper = paper()
+        self.ori_paper = paper(title="After normalization(data set)")
         ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
 
         # *********************************************************************/
         #drawing
         traning_draw_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(traning_draw_draw_panel, 2, 4, 0, 1)
+        body_panel.attach(traning_draw_draw_panel, 2, 3, 0, 1)
 
-        self.traning_draw_paper = paper()
+        self.traning_draw_paper = paper(title="Traning set")
         traning_draw_draw_panel.pack_start(self.traning_draw_paper.canvas, True, True, 0)
         self.traning_draw_paper.resetpaper()
 
 
 
         testing_draw_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(testing_draw_draw_panel, 2, 4, 1, 2)
+        body_panel.attach(testing_draw_draw_panel, 2, 3, 1, 2)
 
-        self.testing_draw_paper = paper()
+        self.testing_draw_paper = paper(title="Testing set")
         testing_draw_draw_panel.pack_start(self.testing_draw_paper.canvas, True, True, 0)
         self.testing_draw_paper.resetpaper()
 
@@ -338,7 +364,6 @@ class nNetwork(Gtk.Window):
 
         if response == Gtk.ResponseType.OK:
             #reset
-            self.testing_draw_paper.resetpaper()
             self.nninfo.reset()
             self.log_refresh()
 
@@ -347,20 +372,49 @@ class nNetwork(Gtk.Window):
             print(self.traning_testing_rate_sb.get_value() / 100)
             self.dataset.set_file_name(dialog.get_filename())
             self.dataset.open_file()
-            self.training_set = self.dataset.get_data(self.traning_testing_rate_sb.get_value() / 100)
-            self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
-            self.testing_set = self.dataset.get_data(1 - self.traning_testing_rate_sb.get_value() / 100)
-            self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+            # if self.dataset.get_data_size() > 100:
+            #     print("tt rate\t", self.traning_testing_rate_sb.get_value())
+            #     self.training_set = self.dataset.get_data(self.traning_testing_rate_sb.get_value() / 100)
+            #     self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+            #     self.testing_set = self.dataset.get_data(1 - self.traning_testing_rate_sb.get_value() / 100)
+            #     self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+            # else:
+            #     self.training_set = self.dataset.get_data(1)
+            #     self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+            #     self.testing_set = self.dataset.get_data(1)
+            #     self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
 
             #log info
-            self.dataset_info_msg_lab.set_text(dialog.get_filename().split('/')[-1] + " \n" + self.dataset.get_data_size().__str__() + " \n" + self.dataset.get_data_dimension().__str__() + " \n" + self.dataset.get_data_classification_num().__str__() + " ")
+            file_name = dialog.get_filename().split('/')[-1]
+
+
+            if self.dataset.get_data_size() > 100:
+                print("tt rate\t", self.traning_testing_rate_sb.get_value())
+                self.training_set = self.dataset.get_data(self.traning_testing_rate_sb.get_value() / 100)
+                self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+                self.testing_set = self.dataset.get_data(1 - self.traning_testing_rate_sb.get_value() / 100)
+                self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+            else:
+                self.training_set = self.dataset.get_data(1)
+                self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+                self.testing_set = self.dataset.get_data(1)
+                self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
             self.nninfo.traning.Data_set_size = len(self.training_set[1])
             self.nninfo.testing.Data_set_size = len(self.testing_set[1])
 
-            self.ori_paper.resetpaper()
-            self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = True),self.dataset.get_class_middle())
-            self.ori_paper.draw()
+            if self.dataset.get_data_dimension() == 2:
+                self.ori_paper.resetpaper()
+                self.ori_paper.draw_2d_point(self.dataset.get_data(1, is_random = True),self.dataset.get_class_middle())
+                self.ori_paper.expend_lim()
+                self.ori_paper.draw()
+            else:
+                self.ori_paper.resetpaper()
+                self.ori_paper.draw()
 
+            self.dataset_info_msg_lab.set_text((file_name[0:18] + "..." if len(file_name) > 20 else file_name) + " \n" + self.dataset.get_data_size().__str__() + " \n" + self.dataset.get_data_dimension().__str__() + " \n" + self.dataset.get_data_classification_num().__str__() + " ")
+
+            self.traning_draw_paper.resetpaper()
+            self.testing_draw_paper.resetpaper()
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
         #print(self.data, ", ", self.class_table, ", ", tmp_table)
@@ -390,101 +444,115 @@ class nNetwork(Gtk.Window):
     def log_refresh(self, widget = None, pannel="ALL"):
         tmp_str = ""
         if pannel == "ALL":
-            tmp_str = format(self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
+            tmp_str = format(100 - self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
             self.traning_log_msg_lab.set_text(tmp_str)
-            tmp_str = format(self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
+            tmp_str = format(100 - self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
             self.testing_log_msg_lab.set_text(tmp_str)
         elif pannel == "Testing":
-            tmp_str = format(self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
+            tmp_str = format(100 - self.nninfo.testing.Error_rate * 100.0, '.4f') + "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
             self.testing_log_msg_lab.set_text(tmp_str)
         elif pannel == "Training":
-            tmp_str = format(self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
+            tmp_str = format(100 - self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + self.nninfo.traning.Data_set_size.__str__() + " \n" + self.nninfo.traning.Iteration_times.__str__() + " "
             self.traning_log_msg_lab.set_text(tmp_str)
     def on_clicked_train(self, widget):
+
         tmp_struct = self.mlp_structure_ety.get_text()
         self.nnetwork = mlp(structure = [int(x) for x in tmp_struct.split(',')], dimension = len(self.training_set[0][0]), err_rate = self.training_err_rate_sb.get_value(),class_middle = self.dataset.get_class_middle(), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-        self.nninfo.traning.Iteration_times, suc, err = self.nnetwork.training(self.training_set)
+        self.nninfo.traning.Iteration_times, suc, err = self.nnetwork.training(self.training_set, self.traning_draw_paper, self.on_clicked_draw)
         self.nninfo.traning.Error_rate = len(err[0])/(len(err[0]) + len(suc[0]))
-
-        self.traning_draw_paper.resetpaper()
-        self.traning_draw_paper.draw_2d_point(suc, self.dataset.get_class_middle())
-        self.traning_draw_paper.draw_2d_point(err, self.dataset.get_class_middle(), 'x')
-        self.traning_draw_paper.draw()
         self.log_refresh(pannel="Training")
-        # test 2***************************************************************/
-        if len(self.training_set[0][0]) == 2 and self.nninfo.traning.Error_rate < 1:
-            cm = self.dataset.get_class_middle()
-            self.ori_paper.resetpaper()
-            self.ori_paper.draw_2d_point(self.dataset.get_data(1),cm)
-            density = 100
+        # print("mse", self.nnetwork.get_mse())
+        # self.weights = self.nnetwork.get_weights()
+        # print(self.weights)
+        if len(self.training_set[0][0]) == 2:
+            draw_thread = threading.Thread(target=self.draw_area())
+            draw_thread.start()
+            draw_thread.join()
 
-            x = np.linspace(0,1,density)
-            y = np.linspace(0,1,density)
-            x, y = np.meshgrid(x, y)
-            area_data = []
-            tmp_x = []
-            tmp_y = []
-            tmp_data = []
+        draw_thread = threading.Thread(target=self.on_clicked_draw(self.traning_draw_paper, suc, err, self.dataset.get_class_middle()))
+        draw_thread.start()
+        draw_thread.join()
 
-            for i in x:
-                tmp_x.extend(list(i))
+    def draw_area(self):
+        cm = self.dataset.get_class_middle()
+        self.ori_paper.resetpaper()
+        self.ori_paper.draw_2d_point(self.dataset.get_data(1),cm)
+        self.ori_paper.expend_lim()
+        density = 100
 
-            for i in y:
-                tmp_y.extend(list(i))
-            for i, j in zip(tmp_x, tmp_y):
-                tmp_data.append([i,j])
+        # x = np.linspace(0,1,density)
+        # y = np.linspace(0,1,density)
 
-            z = self.nnetwork.classifier(tmp_data)
-            zp = []
-            for c in z:
-                zp.extend([cm.index(c)])
-            z = zp
-            # print("x len", len(x))
+        x = np.linspace(-0.02, 1.02,density)
+        y = np.linspace(-0.02, 1.02,density)
+        x, y = np.meshgrid(x, y)
+        area_data = []
+        tmp_x = []
+        tmp_y = []
+        tmp_data = []
 
-            tmp = []
-            for j in range(len(y)):
-                # print(j * len(x), ", ", j * (len(x)) + len(x) - 1)
-                tmp.append(z[j * density:j * density + density])
-            # print("z", z, ", ", len(tmp), ", ", len(tmp[0]))
-            z = np.vstack(tmp)
+        for i in x:
+            tmp_x.extend(list(i))
 
-            cMap = colors.ListedColormap(["r","b","g","c","m","y","k","w"][0:len(cm)])
-            self.ori_paper.ax.pcolormesh(x,y,z,cmap=cMap, alpha=0.4)
-            self.ori_paper.draw()
+        for i in y:
+            tmp_y.extend(list(i))
+        for i, j in zip(tmp_x, tmp_y):
+            tmp_data.append([i,j])
 
+        z = self.nnetwork.classifier(tmp_data)
 
+        zp = []
+        for i in cm:
+            if z.count(i) == 0:
+                return
+        for c in z:
+            zp.extend([cm.index(c)])
+        z = zp
+        # print("x len", len(x))
 
-        # *********************************************************************/
+        tmp = []
+        for j in range(len(y)):
+            # print(j * len(x), ", ", j * (len(x)) + len(x) - 1)
+            tmp.append(z[j * density:j * density + density])
+        # print("z", z, ", ", len(tmp), ", ", len(tmp[0]))
+        z = np.vstack(tmp)
 
-        # mnn = perceptron(len(self.training_set[0][0]), learning_rate = self.learning_rate_sb.get_value(), training_times = int(self.training_times_sb.get_value()), best_w = self.find_best)
-        # mnn.training(self.training_set)
-        # self.weights = [mnn.get_weights()]
-        # self.err_rate_value_lab.set_text(str(mnn.get_err_rate(self.testing_set) * 100) + "%")
-
-        # self.class_num_value_lab.set_text(str(len(self.class_table)))
-        # self.itimes_value_lab.set_text(str(mnn.get_itimes()))
-        # self.num_data_value_lab.set_text(str(len(self.training_set[0])))
-        # tmp = mnn.get_best_result()
-        # tmp[0] += 1
-        # self.best_times_value_lab.set_text(str(tmp))
+        cMap = colors.ListedColormap(["r","b","g","c","m","y","k","w"][0:len(cm)])
+        self.ori_paper.ax.pcolormesh(x,y,z,cmap=cMap, alpha=0.4)
+        self.ori_paper.draw()
     def on_clicked_test(self, widget):
         suc, err = self.nnetwork.testing(self.testing_set)
         self.nninfo.testing.Error_rate = len(err[0])/(len(err[0]) + len(suc[0]))
-        self.testing_draw_paper.resetpaper()
-        self.testing_draw_paper.draw_2d_point(suc, self.dataset.get_class_middle())
-        self.testing_draw_paper.draw_2d_point(err, self.dataset.get_class_middle(), 'x')
-        self.testing_draw_paper.draw()
+        draw_thread = threading.Thread(target=self.on_clicked_draw(widget, self.testing_draw_paper, suc, err, self.dataset.get_class_middle()))
+        draw_thread.start()
+        draw_thread.join()
         self.log_refresh(pannel="Testing")
         # print(self.nninfo.testing.Error_rate)
     def on_clicked_run(self, widget):
         self.on_clicked_train(widget)
         self.on_clicked_test(widget)
+    @staticmethod
+    def on_clicked_draw(draw_paper, suc, err, class_middle):
+        draw_paper.resetpaper()
+        draw_paper.draw_2d_point(suc, class_middle)
+        draw_paper.draw_2d_point(err, class_middle, 'x')
+        draw_paper.expend_lim()
+        draw_paper.draw()
+    def on_clicked_generate(self, widght):
+        if self.dataset.get_data_size() > 100:
+            print("tt rate\t", self.traning_testing_rate_sb.get_value())
+            self.training_set = self.dataset.get_data(self.traning_testing_rate_sb.get_value() / 100)
+            self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+            self.testing_set = self.dataset.get_data(1 - self.traning_testing_rate_sb.get_value() / 100)
+            self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+        else:
+            self.training_set = self.dataset.get_data(1)
+            self.training_set = (dp.to_ndata(self.training_set[0]), self.training_set[1])
+            self.testing_set = self.dataset.get_data(1)
+            self.testing_set = (dp.to_ndata(self.testing_set[0]), self.testing_set[1])
+        self.nninfo.traning.Data_set_size = len(self.training_set[1])
+        self.nninfo.testing.Data_set_size = len(self.testing_set[1])
 
-    def on_clicked_draw(self, widget):
-        print("draw")
-        draw_thread = threading.Thread(target=self.draw_2dfig)
-        draw_thread.start()
-        draw_thread.join()
         #self.draw_2dfig()
 
     def draw_2dfig(self):
