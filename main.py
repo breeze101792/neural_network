@@ -523,7 +523,7 @@ class nNetwork(Gtk.Window):
     def on_clicked_test(self, widget):
         suc, err = self.nnetwork.testing(self.testing_set)
         self.nninfo.testing.Error_rate = len(err[0])/(len(err[0]) + len(suc[0]))
-        draw_thread = threading.Thread(target=self.on_clicked_draw(widget, self.testing_draw_paper, suc, err, self.dataset.get_class_middle()))
+        draw_thread = threading.Thread(target=self.on_clicked_draw(self.testing_draw_paper, suc, err, self.dataset.get_class_middle()))
         draw_thread.start()
         draw_thread.join()
         self.log_refresh(pannel="Testing")
