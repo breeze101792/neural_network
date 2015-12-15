@@ -27,7 +27,7 @@ class paper:
         self.ax.set_title(self.title)
         # self.ax.set_xlim(-0.02,1.02)
         # self.ax.set_ylim(-0.02,1.02)
-        self.ax.grid(True)
+        # self.ax.grid(True)
     def expend_lim(self, v = 0.02):
         self.ax.set_xlim(self.ax.get_xlim()[0]-v,self.ax.get_xlim()[1]+v)
         self.ax.set_ylim(self.ax.get_ylim()[0]-v,self.ax.get_ylim()[1]+v)
@@ -113,6 +113,28 @@ class paper:
 
     def __draw_3d(self):
         pass
+    def draw_net(self, net, i_len, j_len):
+        tmp_x = []
+        tmp_y = []
+        h_x = []
+        h_y = []
+        v_x = []
+        v_y = []
+        for i in range(i_len):
+            h_x = []
+            h_y = []
+            v_x = []
+            v_y = []
+            for j in range(j_len):
+                h_x.append(net[i][j][0])
+                h_y.append(net[i][j][1])
+                v_x.append(net[j][i][0])
+                v_y.append(net[j][i][1])
+            tmp_x.append(h_x)
+            tmp_y.append(h_y)
+            self.ax.plot(h_x, h_y, 'b-')
+            self.ax.plot(v_x, v_y, 'b-')
+        self.ax.plot(tmp_x, tmp_y, 'b.')
 
 class MainClass():
     def __init__(self, canvas):
