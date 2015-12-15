@@ -99,7 +99,7 @@ class nNetwork(Gtk.Window):
 
         #wait for ui setup
         Gtk.Window.__init__(self, title="Neural Network")
-        self.set_default_size(800, 700)
+        self.set_default_size(1000, 700)
 
         action_group = Gtk.ActionGroup("my_actions")
 
@@ -125,10 +125,95 @@ class nNetwork(Gtk.Window):
         main_ui.pack_start(body_panel, True, True, 0)
 
 
+        settings_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing = 10)
+        body_panel.attach(settings_panel, 0, 1, 0, 2, xpadding=8, ypadding=8)
+
+        settings_lab = Gtk.Label("Settings", xalign=0)
+        settings_panel.pack_start(settings_lab, False, False, 0)
+        # *********************************************************************
+        nn_settings_lab = Gtk.Label("Network Settings", xalign=0)
+        settings_panel.pack_start(nn_settings_lab, False, False, 0)
+
+        # net_size_x_group
+        net_size_x_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(net_size_x_group, False, False, 0)
+        net_size_x_lab = Gtk.Label("Net Size(x):", xalign=0)
+        net_size_x_group.attach(net_size_x_lab, 0, 1, 0, 1)
+        net_size_x_adj = Gtk.Adjustment(10, 0, 100, 5, 0, 0)
+        self.net_size_x_sb = Gtk.SpinButton()
+        self.net_size_x_sb.set_alignment(xalign=1)
+        self.net_size_x_sb.set_adjustment(net_size_x_adj)
+        net_size_x_group.attach(self.net_size_x_sb, 1, 2, 0, 1)
+        self.net_size_x_sb.set_value(20)
+
+        # net_size_y_group
+        net_size_y_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(net_size_y_group, False, False, 0)
+        net_size_y_lab = Gtk.Label("Net Size(y):", xalign=0)
+        net_size_y_group.attach(net_size_y_lab, 0, 1, 0, 1)
+        net_size_y_adj = Gtk.Adjustment(10, 0, 100, 5, 0, 0)
+        self.net_size_y_sb = Gtk.SpinButton()
+        self.net_size_y_sb.set_alignment(xalign=1)
+        self.net_size_y_sb.set_adjustment(net_size_y_adj)
+        net_size_y_group.attach(self.net_size_y_sb, 1, 2, 0, 1)
+        self.net_size_y_sb.set_value(20)
+
+        # learning rate
+        learning_rate_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(learning_rate_group, False, False, 0)
+        learning_rate_lab = Gtk.Label("Learning rate(0.1):", xalign=0)
+        learning_rate_group.attach(learning_rate_lab, 0, 1, 0, 1)
+        learning_rate_adj = Gtk.Adjustment(2, 0, 100, 1, 10, 0)
+        self.learning_rate_sb = Gtk.SpinButton()
+        self.learning_rate_sb.set_alignment(xalign=1)
+        self.learning_rate_sb.set_adjustment(learning_rate_adj)
+        learning_rate_group.attach(self.learning_rate_sb, 1, 2, 0, 1)
+        self.learning_rate_sb.set_value(6)
+
+        # traning times
+        training_times_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(training_times_group, False, False, 0)
+        training_times_lab = Gtk.Label("Traning times:", xalign=0)
+        training_times_group.attach(training_times_lab, 0, 1, 0, 1)
+        training_times_adj = Gtk.Adjustment(50, 0, 10000, 20, 0, 0)
+        self.training_times_sb = Gtk.SpinButton()
+        self.training_times_sb.set_alignment(xalign=1)
+        self.training_times_sb.set_adjustment(training_times_adj)
+        training_times_group.attach(self.training_times_sb, 1, 2, 0, 1)
+        self.training_times_sb.set_value(5)
+
+        # standar_diviison_group
+        standar_diviison_group = Gtk.Table(1, 2, True)
+        settings_panel.pack_start(standar_diviison_group, False, False, 0)
+        standar_diviison_lab = Gtk.Label("Standar Division(0.01):", xalign=0)
+        standar_diviison_group.attach(standar_diviison_lab, 0, 1, 0, 1)
+        standar_diviison_adj = Gtk.Adjustment(10, 0, 100, 5, 0, 0)
+        self.standar_diviison_sb = Gtk.SpinButton()
+        self.standar_diviison_sb.set_alignment(xalign=1)
+        self.standar_diviison_sb.set_adjustment(standar_diviison_adj)
+        standar_diviison_group.attach(self.standar_diviison_sb, 1, 2, 0, 1)
+        self.standar_diviison_sb.set_value(10)
+
+
+        # action buttom
+        action_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        settings_panel.pack_start(action_group, False, False, 0)
+
+        tarin_button = Gtk.Button(label = "Train")
+        tarin_button.connect("clicked", self.on_clicked_train)
+        action_group.pack_start(tarin_button, False, False, 0)
+
+        ori_draw_panel = Gtk.Box(10, 2, True)
+        settings_panel.pack_start(ori_draw_panel, True, True, 0)
+
+        self.ori_paper = paper(title="Data set")
+        ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
+
+
         # *********************************************************************/
         #drawing
         self.traning_draw_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(self.traning_draw_draw_panel, 0, 3, 0, 2)
+        body_panel.attach(self.traning_draw_draw_panel, 1, 3, 0, 2)
 
         self.traning_draw_paper = paper(title="SOM")
         self.traning_draw_draw_panel.pack_start(self.traning_draw_paper.canvas, True, True, 0)
@@ -215,6 +300,8 @@ class nNetwork(Gtk.Window):
             self.dataset.set_file_name(dialog.get_filename())
             self.dataset.open_file()
             self.training_set = self.dataset.get_data()
+            self.ori_paper.resetpaper()
+            self.ori_paper.draw_2d_point(self.training_set, self.dataset.get_class_middle())
             #
             # #log info
             # file_name = dialog.get_filename().split('/')[-1]
@@ -266,19 +353,21 @@ class nNetwork(Gtk.Window):
         filter_any.set_name("Any files")
         filter_any.add_pattern("*")
         dialog.add_filter(filter_any)
-    def on_clicked_train(self, widget):
-        x = 25
-        y = 25
-        print("train")
-        som = SOM(x,y)
-        som.net_init()
-        som.training(self.training_set[0])
-        # som.printnet()
+    def draw_function(self, net, lock = [True]):
         self.traning_draw_paper.resetpaper()
-        self.traning_draw_paper.draw_net(som.get_net(), x,y)
+        self.traning_draw_paper.draw_net(net, self.net_size_x_sb.get_value_as_int(), self.net_size_y_sb.get_value_as_int())
+        self.traning_draw_paper.draw()
         self.traning_draw_draw_panel.queue_draw()
+        lock[0] = False
+    def on_clicked_train(self, widget):
+        print("train")
+        som = SOM(self.net_size_x_sb.get_value_as_int(), self.net_size_y_sb.get_value_as_int(), self.standar_diviison_sb.get_value() / 10, self.learning_rate_sb.get_value() / 10, self.training_times_sb.get_value_as_int())
+        som.net_init()
+        som.training(self.training_set[0], self.draw_function)
+        # som.printnet()
+        self.draw_function(som.get_net())
         print("end")
-        self.traning_draw_paper.draw_2d_point(self.training_set, self.dataset.get_class_middle())
+        # self.traning_draw_paper.draw_2d_point(self.training_set, self.dataset.get_class_middle())
     def on_clicked_run(self, widget):
 
         self.on_clicked_train(widget)
