@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 import matplotlib.pyplot as plt
 import threading
@@ -144,7 +144,7 @@ class nNetwork(Gtk.Window):
         self.net_size_x_sb.set_alignment(xalign=1)
         self.net_size_x_sb.set_adjustment(net_size_x_adj)
         net_size_x_group.attach(self.net_size_x_sb, 1, 2, 0, 1)
-        self.net_size_x_sb.set_value(20)
+        self.net_size_x_sb.set_value(50)
 
         # net_size_y_group
         net_size_y_group = Gtk.Table(1, 2, True)
@@ -156,7 +156,7 @@ class nNetwork(Gtk.Window):
         self.net_size_y_sb.set_alignment(xalign=1)
         self.net_size_y_sb.set_adjustment(net_size_y_adj)
         net_size_y_group.attach(self.net_size_y_sb, 1, 2, 0, 1)
-        self.net_size_y_sb.set_value(20)
+        self.net_size_y_sb.set_value(50)
 
         # learning rate
         learning_rate_group = Gtk.Table(1, 2, True)
@@ -180,7 +180,7 @@ class nNetwork(Gtk.Window):
         self.training_times_sb.set_alignment(xalign=1)
         self.training_times_sb.set_adjustment(training_times_adj)
         training_times_group.attach(self.training_times_sb, 1, 2, 0, 1)
-        self.training_times_sb.set_value(5)
+        self.training_times_sb.set_value(2)
 
         # standar_diviison_group
         standar_diviison_group = Gtk.Table(1, 2, True)
@@ -192,7 +192,7 @@ class nNetwork(Gtk.Window):
         self.standar_diviison_sb.set_alignment(xalign=1)
         self.standar_diviison_sb.set_adjustment(standar_diviison_adj)
         standar_diviison_group.attach(self.standar_diviison_sb, 1, 2, 0, 1)
-        self.standar_diviison_sb.set_value(10)
+        self.standar_diviison_sb.set_value(20)
 
 
         # action buttom
@@ -203,23 +203,28 @@ class nNetwork(Gtk.Window):
         tarin_button.connect("clicked", self.on_clicked_train)
         action_group.pack_start(tarin_button, False, False, 0)
 
-        ori_draw_panel = Gtk.Box(10, 2, True)
-        settings_panel.pack_start(ori_draw_panel, True, True, 0)
+        abort_button = Gtk.Button(label = "Abort")
+        abort_button.connect("clicked", self.on_clicked_abort)
+        action_group.pack_start(abort_button, False, False, 0)
+
+        self.ori_draw_panel = Gtk.Box(10, 2, True)
+        settings_panel.pack_start(self.ori_draw_panel, True, True, 0)
 
         self.ori_paper = paper(title="Data set")
-        ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
+        self.ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
 
 
         # *********************************************************************/
         #drawing
-        self.traning_draw_draw_panel = Gtk.Box(10, 2, True)
-        body_panel.attach(self.traning_draw_draw_panel, 1, 3, 0, 2)
+        self.traning_draw_panel = Gtk.Box(10, 2, True)
+        body_panel.attach(self.traning_draw_panel, 1, 3, 0, 2)
 
         self.traning_draw_paper = paper(title="SOM")
-        self.traning_draw_draw_panel.pack_start(self.traning_draw_paper.canvas, True, True, 0)
+        self.traning_draw_panel.pack_start(self.traning_draw_paper.canvas, True, True, 0)
         self.traning_draw_paper.resetpaper()
 
         self.training_set = None
+        self.status_flag = [False]
 
 
         # self.classifier = None
@@ -302,6 +307,7 @@ class nNetwork(Gtk.Window):
             self.training_set = self.dataset.get_data()
             self.ori_paper.resetpaper()
             self.ori_paper.draw_2d_point(self.training_set, self.dataset.get_class_middle())
+            self.ori_draw_panel.queue_draw()
             #
             # #log info
             # file_name = dialog.get_filename().split('/')[-1]
@@ -357,13 +363,15 @@ class nNetwork(Gtk.Window):
         self.traning_draw_paper.resetpaper()
         self.traning_draw_paper.draw_net(net, self.net_size_x_sb.get_value_as_int(), self.net_size_y_sb.get_value_as_int())
         self.traning_draw_paper.draw()
-        self.traning_draw_draw_panel.queue_draw()
+        self.traning_draw_panel.queue_draw()
         lock[0] = False
     def on_clicked_train(self, widget):
         print("train")
-        som = SOM(self.net_size_x_sb.get_value_as_int(), self.net_size_y_sb.get_value_as_int(), self.standar_diviison_sb.get_value() / 10, self.learning_rate_sb.get_value() / 10, self.training_times_sb.get_value_as_int())
+        som = SOM(self.net_size_x_sb.get_value_as_int(), self.net_size_y_sb.get_value_as_int(), self.standar_diviison_sb.get_value() / 10, self.learning_rate_sb.get_value() / 10, self.training_times_sb.get_value_as_int(), self.status_flag)
         som.net_init()
-        som.training(self.training_set[0], self.draw_function)
+        thread = threading.Thread(target=som.training(self.training_set[0], self.draw_function))
+        thread.daemon = True
+        thread.start()
         # som.printnet()
         self.draw_function(som.get_net())
         print("end")
@@ -371,12 +379,15 @@ class nNetwork(Gtk.Window):
     def on_clicked_run(self, widget):
 
         self.on_clicked_train(widget)
+    def on_clicked_abort(self, widget):
+        self.abort_flag = [True]
 
 
     def on_menu_others(self, widget):
         print("Menu item " + widget.get_name() + " was selected")
 
 def main():
+    GObject.threads_init()
     window = nNetwork()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()

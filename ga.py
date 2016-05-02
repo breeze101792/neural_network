@@ -6,8 +6,7 @@ import random
 
 class ga:
 
-    def __init__(self, dataset, eval_func, iteration=500, population=10, crossover_rate=0.6, mutation_rate=0.2):
-        self.iteration = iteration
+    def __init__(self, dataset, eval_func, population=10, crossover_rate=0.6, mutation_rate=0.2):
         self.population = population
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
@@ -49,7 +48,7 @@ class ga:
         # print(self.vec_size)
         for _ in range(self.population):
             self.pool.append(np.random.rand(self.vec_size) * 2 - 1)
-        self.best_vec = self.pool[0]
+        self.best_vec = [0, self.pool[0]]
         # print("pool init\t->", self.pool)
 
     def cp_to_pool(self):
@@ -81,11 +80,12 @@ class ga:
         # print("f of x, mean\t", f_of_x, ", ", f_of_x / f_mean, ", ", f_mean)
         # print("co_pool\t", self.co_pool)
 
-        print(len(self.co_pool), ", ", self.population)
+        # print(len(self.co_pool), ", ", self.population)
         for _ in range(self.population - len(self.co_pool)):
             self.co_pool.append(self.pool[max_idx])
-        if f_of_x[max_idx] > self.eval_func(self.best_vec):
-            self.best_vec = self.pool[max_idx]
+        if f_of_x[max_idx] > self.best_vec[0]:
+            self.best_vec[1] = self.pool[max_idx]
+            self.best_vec[0] = f_of_x[max_idx]
         # print("co pool\t->",self.co_pool)
         # print("end of copy")
         # input()
@@ -124,37 +124,34 @@ class ga:
                 # print(self.pool[idx])
                 # print(self.pool)
                 # np.random.rand(self.data_dimension) * self.mutation_scal
-                self.pool[idx] = self.pool[idx] * \
-                    np.random.rand(self.data_dimension)
+                self.pool[idx] = self.pool[idx] + np.random.rand(self.data_dimension) * 2 - 1
                 # print(np.random.rand(self.data_dimension))
                 # print(self.pool[idx])
                 # print(self.pool)
                 # print("mutate")
         # print("mutation\t-> ", self.pool)
 
-    def time_flow(self):
-        self.pool_init()
+    def time_flow(self, iteration):
         # print("ga data", self.dataset)
-        for idx in range(self.iteration):
-            print("iteration:", idx)
+        for idx in range(iteration):
+
             self.cp_to_pool()
             self.cross_over()
             self.mutation()
             # print(self.pool)
             tmp = self.find_best()
-            # print("find best\t", tmp)
+            print("find best\t", idx, ", ", tmp)
             # if tmp[1] > 1.5:
             #     return self.pool[tmp[0]]
             # print("\n\n\n")
-        return self.best_vec
+        print("last best\t", self.best_vec[0])
         # return self.pool[tmp[0]]
         # print(len(self.pool) ", ", len(self.co_pool))
 
 
 class rbfn:
 
-    def __init__(self, dataset, size=15, iteration=500, population=10, crossover_rate=0.6, mutation_rate=0.2):
-        self.iteration = iteration
+    def __init__(self, dataset, size=15, population=10, crossover_rate=0.6, mutation_rate=0.2):
         self.population = population
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
@@ -167,6 +164,10 @@ class rbfn:
         self.data_size = len(dataset[0][0])
         self.dataset = dataset
         self.weight_init()
+
+        self.ga = ga([np.concatenate([self.mean, self.sd, self.weights, [self.theta]])],
+                  self.eval_func, population=self.population)
+        self.ga.pool_init()
 
     def weight_init(self):
         # self.weights = np.ones(self.size)
@@ -211,16 +212,15 @@ class rbfn:
             # print("eval", data,  ", ",  self.dataset[1][idx], ", ", tmp_list.sum() + theta, ", ", self.dataset[1][idx] - (tmp_list.sum() + theta))
             engery += np.power(self.dataset[1]
                                [idx] - (tmp_list.sum() + theta), 2)
-        print("En\t", engery/2, ", ",  2 / (engery + 0.00001))
+        # print("En\t", engery/2, ", ",  2 / (engery + 0.00001))
         return 2 / (engery + 0.00001)
 
-    def traning(self):
+    def traning(self, iteration = 10):
         # print("start traning")
         # self.eval_func(np.concatenate([self.mean, self.sd, self.weights, [self.theta]]))
         # print(self.iteration, self.population)
-        myga = ga([np.concatenate([self.mean, self.sd, self.weights, [self.theta]])],
-                  self.eval_func, iteration=self.iteration, population=self.population)
-        vec = myga.time_flow()
+        self.ga.time_flow(iteration)
+        vec = self.ga.best_vec[1]
 
         print("vec last\t", vec)
 
@@ -228,6 +228,7 @@ class rbfn:
         self.sd = vec[len(self.mean): len(self.mean) + len(self.sd)]
         self.weights = vec[len(self.mean) + len(self.sd):-1]
         self.theta = vec[-1]
+        return self.ga.best_vec[0]
 
     def set_test(self):
         self.theta = 0.797393474643501

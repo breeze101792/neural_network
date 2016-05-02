@@ -268,6 +268,10 @@ class nNetwork(Gtk.Window):
         action_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         settings_panel.pack_start(action_group, False, False, 0)
 
+        new_button = Gtk.Button(label="New")
+        new_button.connect("clicked", self.on_clicked_new)
+        action_group.pack_start(new_button, False, False, 0)
+
         tarin_button = Gtk.Button(label="Train")
         tarin_button.connect("clicked", self.on_clicked_train)
         action_group.pack_start(tarin_button, False, False, 0)
@@ -538,12 +542,14 @@ class nNetwork(Gtk.Window):
         # print("left\t", self.rbfn.testing(np.array([0.1,0.1,0.5])))
         # return
 
-        while(count < 70):
+        while(True):
             racing_map.update_sensor(mycar)
             theta = self.rbfn.testing(
                 np.array([mycar.sensor_middle, mycar.sensor_right, mycar.sensor_left]))
+            theta = theta if theta < 40 else 40
+            theta = theta if theta > -40 else -40
             print([mycar.sensor_middle, mycar.sensor_right,
-                   mycar.sensor_left], (theta * 80 - 40))
+                   mycar.sensor_left], theta)
             mycar.step_forward((theta * 80 - 40) * 0.0174533)
 
             # print(self.rbfn.testing(np.array([15.716004895815198, 9.406684048849488, 23.538679933233805])))
@@ -553,9 +559,8 @@ class nNetwork(Gtk.Window):
             # mycar.step_forward((theta) * 0.0174533)
 
             racing_map.draw(mycar)
-            count += 1
             # time.sleep(0.1)
-            if(mycar.sensor_middle < 0.05 or mycar.sensor_right <0.05 or mycar.sensor_left < 0.05):
+            if(mycar.sensor_middle < 0.05 or mycar.sensor_right <0.05 or mycar.sensor_left < 0.05 or mycar.pos[1] > 37):
                 return
             # if(count == 15):
             #     mycar.dir = 0.001
@@ -571,9 +576,11 @@ class nNetwork(Gtk.Window):
         print("on click train")
         # print(self.layer_size_rate_sb.get_value(), self.training_times_sb.get_value(
         # ), self.population_rate_sb.get_value(), self.crossover_rate_sb.get_value()/100, self.mutation_rate_sb.get_value()/100)
-        self.rbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), iteration=int(self.training_times_sb.get_value(
-        )), population=int(self.population_rate_sb.get_value()), crossover_rate=self.crossover_rate_sb.get_value()/100, mutation_rate=self.mutation_rate_sb.get_value()/100)
-        self.rbfn.traning()
+        self.rbfn.traning(iteration=int(self.training_times_sb.get_value()))
+
+    def on_clicked_new(self, widget):
+        print("on click new")
+        self.rbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=int(self.population_rate_sb.get_value()), crossover_rate=self.crossover_rate_sb.get_value()/100, mutation_rate=self.mutation_rate_sb.get_value()/100)
 
     def on_clicked_test(self, widget):
         print(self.rbfn.testing(np.array([22.0000000, 8.4852814, 8.4852814])))
