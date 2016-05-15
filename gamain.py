@@ -314,27 +314,27 @@ class nNetwork(Gtk.Window):
         traning_log_group = Gtk.Table(1, 2, False)
         info_panel.pack_start(traning_log_group, False, False, 0)
         self.traning_log_title_lab = Gtk.Label(
-            "Accuracy rate:\nTraning set size:\nIteration times:", xalign=0, yalign=0)
+            "MSE:", xalign=0, yalign=0)
         traning_log_group.attach(self.traning_log_title_lab, 0, 1, 0, 1)
-        self.traning_log_msg_lab = Gtk.Label("", xalign=0, yalign=0)
+        self.traning_log_msg_lab = Gtk.Label("0", xalign=0, yalign=0)
         traning_log_group.attach(self.traning_log_msg_lab, 1, 2, 0, 1)
 
         # testing log
-        testing_log_lab = Gtk.Label("#Testing Log", xalign=0, yalign=0)
-        info_panel.pack_start(testing_log_lab, False, False, 0)
-        testing_log_group = Gtk.Table(1, 2, False)
-        info_panel.pack_start(testing_log_group, False, False, 0)
-        self.testing_title_log_lab = Gtk.Label(
-            "Accuracy rate:\nTesting set size:", xalign=0, yalign=0)
-        testing_log_group.attach(self.testing_title_log_lab, 0, 1, 0, 1)
-        self.testing_log_msg_lab = Gtk.Label("", xalign=0, yalign=0)
-        testing_log_group.attach(self.testing_log_msg_lab, 1, 2, 0, 1)
+        # testing_log_lab = Gtk.Label("#Testing Log", xalign=0, yalign=0)
+        # info_panel.pack_start(testing_log_lab, False, False, 0)
+        # testing_log_group = Gtk.Table(1, 2, False)
+        # info_panel.pack_start(testing_log_group, False, False, 0)
+        # self.testing_title_log_lab = Gtk.Label(
+        #     "Accuracy rate:\nTesting set size:", xalign=0, yalign=0)
+        # testing_log_group.attach(self.testing_title_log_lab, 0, 1, 0, 1)
+        # self.testing_log_msg_lab = Gtk.Label("", xalign=0, yalign=0)
+        # testing_log_group.attach(self.testing_log_msg_lab, 1, 2, 0, 1)
 
-        ori_draw_panel = Gtk.Box(10, 2, True)
-        info_panel.pack_start(ori_draw_panel, True, True, 0)
-
-        self.ori_paper = paper(title="After normalization(data set)")
-        ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
+        # ori_draw_panel = Gtk.Box(10, 2, True)
+        # info_panel.pack_start(ori_draw_panel, True, True, 0)
+        #
+        # self.ori_paper = paper(title="After normalization(data set)")
+        # ori_draw_panel.pack_start(self.ori_paper.canvas, True, True, 0)
 
         # *********************************************************************/
         # drawing
@@ -507,22 +507,10 @@ class nNetwork(Gtk.Window):
     def log_refresh(self, widget=None, pannel="ALL"):
         tmp_str = ""
         if pannel == "ALL":
-            tmp_str = format(100 - self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + \
-                self.nninfo.traning.Data_set_size.__str__() + " \n" + \
-                self.nninfo.traning.Iteration_times.__str__() + " "
+            tmp_str = format(self.nninfo.traning.Error_rate * 100, '.4f') + "\n"
             self.traning_log_msg_lab.set_text(tmp_str)
-            tmp_str = format(100 - self.nninfo.testing.Error_rate * 100.0, '.4f') + \
-                "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
-            self.testing_log_msg_lab.set_text(tmp_str)
-        elif pannel == "Testing":
-            tmp_str = format(100 - self.nninfo.testing.Error_rate * 100.0, '.4f') + \
-                "% \n" + self.nninfo.testing.Data_set_size.__str__() + " "
-            self.testing_log_msg_lab.set_text(tmp_str)
         elif pannel == "Training":
-            tmp_str = format(100 - self.nninfo.traning.Error_rate * 100, '.4f') + "% \n" + \
-                self.nninfo.traning.Data_set_size.__str__() + " \n" + \
-                self.nninfo.traning.Iteration_times.__str__() + " "
-            self.traning_log_msg_lab.set_text(tmp_str)
+            tmp_str = format(100 - self.nninfo.traning.Error_rate, '.4f')
 
     def test(self, test):
         while(test < 100):
@@ -576,7 +564,7 @@ class nNetwork(Gtk.Window):
         print("on click train")
         # print(self.layer_size_rate_sb.get_value(), self.training_times_sb.get_value(
         # ), self.population_rate_sb.get_value(), self.crossover_rate_sb.get_value()/100, self.mutation_rate_sb.get_value()/100)
-        self.rbfn.traning(iteration=int(self.training_times_sb.get_value()))
+        self.traning_log_msg_lab.set_text((1 / (self.rbfn.traning(iteration=int(self.training_times_sb.get_value())) + 0.00000001) / len(self.training_set) * 2).__str__())
 
     def on_clicked_new(self, widget):
         print("on click new")
