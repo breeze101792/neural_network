@@ -12,6 +12,7 @@ from matplotlib import colors
 from racing_map import *
 from ga import rbfn
 import time
+import copy
 # color = ["r","b","g","c","m","y","k","w"]
 
 
@@ -114,6 +115,7 @@ class nNetwork(Gtk.Window):
         # wait for ui setup
         Gtk.Window.__init__(self, title="Neural Network")
         self.set_default_size(800, 700)
+        # self.set_default_size(800, 700)
         # self.connect("key-press-event", self.on_window_key_press_event)
 
         action_group = Gtk.ActionGroup("my_actions")
@@ -186,26 +188,28 @@ class nNetwork(Gtk.Window):
         # Cross over
         crossover_rate_group = Gtk.Table(1, 2, True)
         settings_panel.pack_start(crossover_rate_group, False, False, 0)
-        crossover_rate_lab = Gtk.Label("crossover rate(0.01):", xalign=0)
+        crossover_rate_lab = Gtk.Label("alpha for self best(0.01):", xalign=0)
+        # crossover_rate_lab = Gtk.Label("crossover rate(0.01):", xalign=0)
         crossover_rate_group.attach(crossover_rate_lab, 0, 1, 0, 1)
         crossover_rate_adj = Gtk.Adjustment(60, 0, 100, 1, 10, 0)
         self.crossover_rate_sb = Gtk.SpinButton()
         self.crossover_rate_sb.set_alignment(xalign=1)
         self.crossover_rate_sb.set_adjustment(crossover_rate_adj)
         crossover_rate_group.attach(self.crossover_rate_sb, 1, 2, 0, 1)
-        self.crossover_rate_sb.set_value(60)
+        self.crossover_rate_sb.set_value(20)
 
         # mutation rate
         mutation_rate_group = Gtk.Table(1, 2, True)
         settings_panel.pack_start(mutation_rate_group, False, False, 0)
-        mutation_rate_lab = Gtk.Label("mutation rate(0.01):", xalign=0)
+        mutation_rate_lab = Gtk.Label("beta for group best(0.01):", xalign=0)
+        # mutation_rate_lab = Gtk.Label("mutation rate(0.01):", xalign=0)
         mutation_rate_group.attach(mutation_rate_lab, 0, 1, 0, 1)
         mutation_rate_adj = Gtk.Adjustment(5, 0, 100, 1, 10, 0)
         self.mutation_rate_sb = Gtk.SpinButton()
         self.mutation_rate_sb.set_alignment(xalign=1)
         self.mutation_rate_sb.set_adjustment(mutation_rate_adj)
         mutation_rate_group.attach(self.mutation_rate_sb, 1, 2, 0, 1)
-        self.mutation_rate_sb.set_value(5)
+        self.mutation_rate_sb.set_value(20)
 
         population_rate_group = Gtk.Table(1, 2, True)
         settings_panel.pack_start(population_rate_group, False, False, 0)
@@ -568,21 +572,32 @@ class nNetwork(Gtk.Window):
 
     def on_clicked_new(self, widget):
         print("on click new")
-        self.rbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=int(self.population_rate_sb.get_value()), crossover_rate=self.crossover_rate_sb.get_value()/100, mutation_rate=self.mutation_rate_sb.get_value()/100)
+        self.rbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=int(self.population_rate_sb.get_value()), alpha=self.crossover_rate_sb.get_value()/100, beta=self.mutation_rate_sb.get_value()/100)
 
     def on_clicked_test(self, widget):
-        print(self.rbfn.testing(np.array([22.0000000, 8.4852814, 8.4852814])))
-        print(self.rbfn.testing(np.array([21.0028513, 8.3706824, 8.6047198])))
-        print(self.rbfn.testing(np.array([20.0084911, 8.2526888, 8.7363457])))
-        print(self.rbfn.testing(np.array([19.0155847, 8.1329543, 8.8768701])))
+        for _ in range(10):
+            # print("population:")
+            # for i in range(1,11):
+            #     myrbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=50 * i, alpha=0.5, beta=0.5)
+            #     print("population , ",i, ", ", myrbfn.traning(iteration=int(self.training_times_sb.get_value())))
 
-        return
+            print("alpha:")
+            myrbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=50, alpha=0.1, beta=0.1)
+            pool = myrbfn.get_pool()
+            for i in range(1,11):
+                myrbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=50, alpha=i/10, beta=0.8)
+                myrbfn.set_pool(pool)
+                print("population , ",i, ", ", myrbfn.traning(iteration=int(self.training_times_sb.get_value())))
 
-        self.rbfn = rbfn(self.training_set, 15, iteration=5, population=50)
-        mycar = Car()
-        count = 0
-        # self.rbfn.set_test()
-        self.map_draw_paper.test_sensor()
+            print("beta:")
+            for i in range(1,11):
+                myrbfn = rbfn(self.training_set, int(self.layer_size_rate_sb.get_value()), population=50, alpha=0.8, beta=i/10)
+                myrbfn.set_pool(pool)
+                print("population , ",i, ", ", myrbfn.traning(iteration=int(self.training_times_sb.get_value())))
+
+
+
+
         return
 
     def draw_area(self):

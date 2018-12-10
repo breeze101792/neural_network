@@ -2,6 +2,7 @@
 import numpy as np
 import math
 import random
+import copy
 
 
 class ga:
@@ -16,7 +17,7 @@ class ga:
         self.pool = []
         self.co_pool = [[]]
         # self.population = len(dataset)
-        self.data_dimension = len(dataset[0])
+        self.data_dimension = len(dataset[0][0])
         self.mutation_scal = 0.1
 
         self.vec_size = len(dataset[0])
@@ -48,16 +49,18 @@ class ga:
         # print(self.vec_size)
         for _ in range(self.population):
             self.pool.append(np.random.rand(self.vec_size) * 2 - 1)
-        self.best_vec = [0, self.pool[0]]
+        self.best_vec = [self.pool[0], 0]
         # print("pool init\t->", self.pool)
 
     def cp_to_pool(self):
         f_of_x = np.zeros(self.population)
         # print("start of cp to pool~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         # print("pool\t", self.pool)
+
         for idx, each_x in enumerate(self.pool):
             # print(each_x, ",", self.eval_func(each_x))
             f_of_x[idx] = self.eval_func(each_x)
+
 
         max_idx = 0
         self.co_pool = []
@@ -83,9 +86,9 @@ class ga:
         # print(len(self.co_pool), ", ", self.population)
         for _ in range(self.population - len(self.co_pool)):
             self.co_pool.append(self.pool[max_idx])
-        if f_of_x[max_idx] > self.best_vec[0]:
-            self.best_vec[1] = self.pool[max_idx]
-            self.best_vec[0] = f_of_x[max_idx]
+        if f_of_x[max_idx] > self.best_vec[1]:
+            self.best_vec[0] = self.pool[max_idx]
+            self.best_vec[1] = f_of_x[max_idx]
         # print("co pool\t->",self.co_pool)
         # print("end of copy")
         # input()
@@ -124,10 +127,10 @@ class ga:
             if random.random() > self.mutation_rate:
                 # print(self.pool[idx])
                 # print(self.pool)
-                # np.random.rand(self.data_dimension) * self.mutation_scal
+                # np.random.rand(self.vec_size) * self.mutation_scal
                 self.pool[idx] = self.pool[idx] + \
-                    np.random.rand(self.data_dimension) * 2 - 1
-                # print(np.random.rand(self.data_dimension))
+                    np.random.rand(self.vec_size) * 2 - 1
+                # print(np.random.rand(self.vec_size))
                 # print(self.pool[idx])
                 # print(self.pool)
                 # print("mutate")
@@ -146,17 +149,110 @@ class ga:
             # if tmp[1] > 1.5:
             #     return self.pool[tmp[0]]
             # print("\n\n\n")
-        print("last best\t", self.best_vec[0])
+        print("last best\t", self.best_vec[1])
         # return self.pool[tmp[0]]
         # print(len(self.pool) ", ", len(self.co_pool))
 
 
+class pso:
+
+    def __init__(self, dataset, eval_func, population=10, alpha=0.6, beta=0.2):
+        self.population = population
+        # self.crossover_rate = crossover_rate
+        # self.mutation_rate = mutation_rate
+        self.eval_func = eval_func
+
+        self.dataset = dataset
+        self.pool = []
+        # self.co_pool = [[]]
+        self.history_best = []
+        self.group_best = []
+        self.velocity = []
+        # self.population = len(dataset)
+        # self.data_dimension = len(dataset[0])
+        # self.mutation_scal = 0.1
+
+        self.vec_size = len(dataset[0])
+        self.best_vec = None
+        self.alpha = alpha
+        self.beta = beta
+
+    def find_best(self):
+        best_man = 0
+        f_of_x = np.ones(len(self.pool))
+        for idx, each_x in enumerate(self.pool):
+            # print("start of loop")
+            # print(each_x)
+            # print(idx)
+            # print(f_of_x[idx])
+            # print(eval_func(each_x))
+            f_of_x[idx] = self.eval_func(each_x)
+            if f_of_x[best_man] < f_of_x[idx]:
+                best_man = idx
+        # print("best\t-> ", self.pool[best_man], f_of_x[idx])
+        return [best_man, f_of_x[best_man]]
+
+    def pool_init(self):
+        self.pool = []
+        for _ in range(self.population):
+
+            self.pool.append(np.random.rand(self.vec_size) * 2 - 1)
+            self.velocity.append(np.zeros(self.vec_size))
+        self.best_vec = [self.pool[0], 0]
+        # print(self.velocity)
+        # print(self.pool)
+        # print("pool init\t->", self.pool)
+    def fitness_calc(self):
+        # resset group best
+        self.group_best = []
+        # if-else for the first use the var, we need to init it
+        if self.history_best == []:
+            for idx, each_x in enumerate(self.pool):
+                # print("1idx -> \t", idx, ", ", each_x, ", ", self.history_best)
+                # for first round, pretent each x is the self best
+                self.history_best.append([each_x, self.eval_func(each_x)])
+                # set group best to be the first x for init!
+                if self.group_best == []:
+                    self.group_best = self.history_best[0]
+                elif self.history_best[-1][1] > self.group_best[1]:
+                    self.group_best = self.history_best[-1]
+        else:
+            for idx, each_x in enumerate(self.pool):
+                # print("2idx -> \t", idx, ", ", each_x, ", ", self.history_best)
+                tmp = self.eval_func(each_x)
+                # calc self best
+                if self.history_best[idx][1] < tmp:
+                    self.history_best[idx] = [each_x, tmp]
+                # calc group best
+                if self.group_best == []:
+                    self.group_best = self.history_best[0]
+                elif self.history_best[idx][1] > self.group_best[1]:
+                    self.group_best = self.history_best[idx]
+
+    def partical_update(self):
+        # print("pop, ", self.population, ", ", self.vec_size)
+        for idx, each_x in enumerate(self.pool):
+            # print(self.velocity[idx], "\n", self.history_best[idx][0], "\n", self.group_best, "\n", each_x)
+            self.velocity[idx] = self.velocity[idx] + self.alpha * (self.history_best[idx][0] - each_x) + self.beta * (self.group_best[0] - each_x)
+            self.pool[idx] = self.pool[idx] + self.velocity[idx]
+
+    def time_flow(self, iteration):
+        # print("ga data", self.dataset)
+        # print(self.pool)
+        for idx in range(iteration):
+
+            self.fitness_calc()
+            self.partical_update()
+            tmp = self.find_best()
+            if self.group_best[1] > self.best_vec[1]:
+                self.best_vec = self.group_best
+        # print("last best\t", self.best_vec[0])
+
+
 class rbfn:
 
-    def __init__(self, dataset, size=15, population=10, crossover_rate=0.6, mutation_rate=0.2):
+    def __init__(self, dataset, size=15, population=10, alpha=0.6, beta=0.2, oripool = False):
         self.population = population
-        self.crossover_rate = crossover_rate
-        self.mutation_rate = mutation_rate
         # first layer size
         self.size = size
         self.theta = 0.1
@@ -167,9 +263,18 @@ class rbfn:
         self.dataset = dataset
         self.weight_init()
 
-        self.ga = ga([np.concatenate([self.mean, self.sd, self.weights, [self.theta]])],
-                     self.eval_func, population=self.population)
-        self.ga.pool_init()
+        # self.ga = ga([np.concatenate([self.mean, self.sd, self.weights, [self.theta]])],
+        #              self.eval_func, population=self.population)
+        # self.ga.pool_init()
+
+        self.opt = pso([np.concatenate([self.mean, self.sd, self.weights, [self.theta]])],
+                     self.eval_func, population=self.population, alpha=alpha, beta=beta)
+
+        self.opt.pool_init()
+    def get_pool(self):
+        return copy.deepcopy(self.opt.pool)
+    def set_pool(self, pool):
+        self.opt.pool = copy.deepcopy(pool)
 
     def weight_init(self):
         # self.weights = np.ones(self.size)
@@ -218,19 +323,29 @@ class rbfn:
         return 2 / (engery + 0.00001)
 
     def traning(self, iteration=10):
-        # print("start traning")
-        # self.eval_func(np.concatenate([self.mean, self.sd, self.weights, [self.theta]]))
-        # print(self.iteration, self.population)
-        self.ga.time_flow(iteration)
-        vec = self.ga.best_vec[1]
+        # ga
+        # self.ga.time_flow(iteration)
+        # vec = self.ga.best_vec[0]
+        #
+        # print("vec last\t", vec)
+        #
+        # self.mean = vec[0: len(self.mean)]
+        # self.sd = vec[len(self.mean): len(self.mean) + len(self.sd)]
+        # self.weights = vec[len(self.mean) + len(self.sd):-1]
+        # self.theta = vec[-1]
+        # return self.ga.best_vec[1]
 
-        print("vec last\t", vec)
+        self.opt.time_flow(iteration)
+        vec = self.opt.best_vec[0]
+
+        # print("vec last\t", vec)
 
         self.mean = vec[0: len(self.mean)]
         self.sd = vec[len(self.mean): len(self.mean) + len(self.sd)]
         self.weights = vec[len(self.mean) + len(self.sd):-1]
         self.theta = vec[-1]
-        return self.ga.best_vec[0]
+        return self.opt.best_vec[1]
+
 
     def set_test(self):
         # self.theta = 0.797393474643501
@@ -296,6 +411,10 @@ class rbfn:
 
 
 def eval_func(val):
+
+    return 2 - abs(val.sum()) if abs(val.sum()) < 2 else 2
+
+def eval_func2(val):
     tmp = -np.power(val[0] - 6, 2) + -np.power(val[1] - 8, 2) + 40
     print("eval", tmp if tmp > 0 else 0)
     return tmp if tmp > 0 else 0
@@ -303,19 +422,29 @@ def eval_func(val):
 if __name__ == '__main__':
     #
     # test = ga([np.array([1.0, 1]), np.array([6.0, 8]), np.array([10.0, 8]), ], eval_func, mutation_rate=0.1,
-    #           crossover_rate=0.5, iteration=20, population=100)  # np.array([5.0,3]), np.array([19.0,24]
-    # print(test.time_flow())
+    #           crossover_rate=0.5, population=100)  # np.array([5.0,3]), np.array([19.0,24]
+    # print(test.time_flow(10))
 
-    # rb = rbfn(([np.array([0.]), np.array([1.])], [0.4, 0.1]),
-    #           3, iteration=30, population=40)
-    # rb.traning()
-    # print("test data")
-    # print(rb.testing(np.array([0.])))
-    # print(rb.testing(np.array([0.5])))
-    # print(rb.testing(np.array([1])))
+    rb = rbfn(([np.array([0.]), np.array([1.])], [0.9, 0.1]),
+              3, population=100)
+    rb.traning(iteration=30)
+    print("test data")
+    print(rb.testing(np.array([0.])))
+    print(rb.testing(np.array([0.5])))
+    print(rb.testing(np.array([1])))
 
-    rb = rbfn(([np.array([15.3978641292678, 30.0, 11.532046954189472]), np.array([1., 2, 2])], [0.3, 0.8]),
-              15, iteration=1, population=1)
-    # rb.traning()
-    rb.set_test()
-    print("GA->", rb.testing([15.3978641292678, 30.0, 11.532046954189472]))
+    # rb = rbfn(([np.array([15.3978641292678, 30.0, 11.532046954189472]), np.array([1., 2, 2])], [0.3, 0.8]),
+    #           15, population=100)
+    # # rb.traning()
+    # rb.set_test()
+    # print("GA->", rb.testing([15.3978641292678, 30.0, 11.532046954189472]))
+
+
+
+    # test = pso([np.array([1.0, 1]), np.array([6.0, 8]), np.array([10.0, 8]), ], eval_func, mutation_rate=0.1,
+    #           crossover_rate=0.5, population=2)  # np.array([5.0,3]), np.array([19.0,24]
+    # test.pool_init()
+    # print(test.fitness_calc())
+    # print(test.fitness_calc())
+    # print(test.fitness_calc())
+    # print(test.fitness_calc())

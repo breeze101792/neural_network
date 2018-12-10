@@ -10,7 +10,7 @@ class myDict(dict):
         self[key] = value
 
 class data_proc:
-    def __init__(self, file_name = None):
+    def __init__(self, file_name = None, raw_output = 0):
         self.file_name = file_name
         self.data = []
         self.ys = []
@@ -18,6 +18,7 @@ class data_proc:
         self.class_table = []
         self.class_num = 0
         self.max_min = None
+        self.raw_output = raw_output
     def set_file_name(self, file_name):
         self.file_name = file_name
     def open_file(self):
@@ -37,14 +38,14 @@ class data_proc:
                 #init max_min for data normalize
                 if self.max_min == []:
                     # ([min],[max])
-                    for each_d in range(len(tmp_list) - 1):
+                    for each_d in range(len(tmp_list)):
                         self.max_min.append([float(tmp_list[each_d]), float(tmp_list[each_d])])
 
                 if float(tmp_list[-1]) not in self.ys:
                     self.class_num += 1
 
                 # print([float(x) for x in line.split()])
-                for idx_d, each_x in enumerate(tmp_list[0:-1]):
+                for idx_d, each_x in enumerate(tmp_list[0:len(tmp_list)]):
                     each_x = float(each_x)
                     # print("mm a\t", self.max_min[idx_d])
                     # print("each_x\t", each_x)
@@ -84,7 +85,7 @@ class data_proc:
             #print(self.data)
             return sub_dataset, sub_ys
         elif not is_random:
-            return self.data, self.nom_ys
+            return self.nom_data, self.nom_ys
     def get_another_ndata(self, part_of_data):
         sub_dataset = []
         sub_ys = []
@@ -123,7 +124,34 @@ class data_proc:
                     #print([k for k, v in self.class_table.items() if v == each_y])
                     #print("no add ", self.class_table)
             # print("class table\t", self.class_table)
+        elif approach == "func":
+            # TODO fix range
+            print("func")
+            self.class_table = myDict()
+            self.nom_data = []
+            self.nom_ys = []
+            # print("max_min\t", self.max_min)
+            for idx_data in range(len(self.data)):
+                # print("data\t", self.data[idx_data])
+                tmp_data = []
+                for idx_dim in range(len(self.data[idx_data])):
+                    tmp_data.append((self.data[idx_data][idx_dim] - 0) / (30 - 0))
+                    # print("tmpe_data\t", (self.data[idx_data][idx_dim] - self.max_min[idx_dim][0]) / self.max_min[idx_dim][1])
+                self.nom_data.append(tmp_data)
+            # print(self.nom_data)
 
+            for each_y in self.ys:
+                self.nom_ys.append(((each_y + 40)/ 80))
+
+                # if each_y not in self.class_table.values():
+                #     # self.nom_ys.append((each_y - self.max_min[-1][0]) / (self.max_min[-1][1] - self.max_min[-1][0]))
+                #     self.nom_ys.append((each_y - self.max_min[-1][0]) / (self.max_min[-1][1] - self.max_min[-1][0]))
+                #     # print("add ", self.class_table)
+                # else:
+                #     self.nom_ys.append([k for k, v in self.class_table.items() if v == each_y][0])
+                    #print([k for k, v in self.class_table.items() if v == each_y])
+                    #print("no add ", self.class_table)
+            # print("class table\t", self.class_table)
         else:
             print("old")
             self.class_table = myDict()

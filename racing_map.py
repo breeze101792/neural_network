@@ -16,9 +16,11 @@ class Car:
         self.pos = [0,0]
         self.dir = 1.5700
         self.radius = 3
+        self.track = []
     def step_forward(self, theta):
         # self.pos = [self.pos[0] - cos(self.dir), self.pos[1] + sin(self.dir)]
         self.pos = [self.pos[0] + cos(self.dir + theta) + sin(theta)*sin(self.dir), self.pos[1] + sin(self.dir + theta) + sin(theta)*sin(self.dir)]
+        self.track.append(self.pos)
         self.dir = self.dir - np.arcsin(2 * sin(theta) / 3)
         if self.dir < 0:
             self.dir = self.dir + 6.2831853072
@@ -62,9 +64,12 @@ class racing_map:
             self.ax.plot([each_line[0][0], each_line[1][0]], [each_line[0][1], each_line[1][1]], 'b-')
     def draw_car(self, car):
         circ=plt.Circle(car.pos, radius=car.radius, color='g', fill=False)
+
         # circ=plt.Circle([0,0], radius=5, color='g', fill=False)
         self.ax.add_patch(circ)
         self.ax.plot([car.pos[0], car.pos[0] + 5 * cos(car.dir)], [car.pos[1], car.pos[1] + 5 * sin(car.dir)], 'g-');
+        for point in car.track:
+            self.ax.plot(point[0], point[1], 'bo');
     def draw(self, car):
         self.resetpaper()
         self.draw_car(car)

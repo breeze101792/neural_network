@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, Gdk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
 import matplotlib.pyplot as plt
 import threading
@@ -529,7 +529,10 @@ class nNetwork(Gtk.Window):
         self.log_refresh(pannel="Testing")
         # print(self.nninfo.testing.Error_rate)
     def on_clicked_run(self, widget):
-        self.on_clicked_train(widget)
+        # thread = threading.Thread(target=self.on_clicked_train(widget))
+        # thread.daemon = True
+        # thread.star()
+        # self.on_clicked_train(widget)
         self.on_clicked_test(widget)
     @staticmethod
     def on_clicked_draw(draw_paper, suc, err, class_middle):
@@ -572,6 +575,8 @@ class nNetwork(Gtk.Window):
     #         return True # event has been handled
 
 def main():
+    # GObject.threads_init()
+
     window = nNetwork()
     window.connect("delete-event", Gtk.main_quit)
     window.show_all()
